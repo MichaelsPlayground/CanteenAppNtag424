@@ -1,5 +1,21 @@
 # NFC Storage Management Tag Personalization
 
+This app is having just one purpose - it prepares **NTAG21x tags** for the usage with **NFC Storage Management** app.
+
+The general idea is a combined system for a smartphone based storage management that uses 3 main components to work with:
+
+1) **user's Android smartphone**: identifying a storage good by tapping the smartphone to the good (or cardboard) with a 
+NFC sticker (the NTAG21x). When the tag was registered before the smartphone "knows" the good and you are been able to 
+assign a cardboxes content list or photos of the good or content to the entry. All this information is send to the second 
+component.
+2) **backend internet server**: The smartphone sends the data to the backend server (like a synchronization) where they are 
+additionally stored. The actual reason for using an internet server is the access by a personal computer.
+3) **personal computer**: As it is a challenge to enter or edit a lot of text a personal computer access is the better way 
+to handle and enter all the informations regarding the storing goods. Maybe you are having a Word or Pages document with the 
+content information and now you can easilly copy and paste the data 
+
+
+
 ## Note on this description
 
 This is the description of the project but not of this app - I will edit this at a later point !
