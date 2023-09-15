@@ -2,6 +2,7 @@ package de.androidcrypto.nfcstoragemanagementtagpersonalization;
 
 import static android.content.Context.MODE_PRIVATE;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
+import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.bytesToHexNpe;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
 
 import android.content.Intent;
@@ -181,6 +182,10 @@ public class NdefSettingsFragment extends Fragment implements NfcAdapter.ReaderC
                 editor.putString(PREFS_BASE_URL, ndefBaseUrl.getText().toString());
                 editor.apply();
                 editor.putString(PREFS_TEMPLATE_URL_NAME, ndefTemplateString);
+                editor.apply();
+                editor.putString(PREFS_TAG_PASSWORD_NAME, bytesToHexNpe(TAG_PASSWORD));
+                editor.apply();
+                editor.putString(PREFS_TAG_PACK_NAME, bytesToHexNpe(TAG_PACK));
                 editor.apply();
                 ndefResultNfcWriting.setText("NDEF settings saved");
             }

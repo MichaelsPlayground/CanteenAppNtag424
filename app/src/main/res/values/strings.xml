@@ -2,7 +2,7 @@
     <string name="app_name">NFC Storage Management Tag Personalization</string>
     <string name="app_version">0.0.1</string>
     <string name="home_description">This application reads and writes NDEF messages from/to a NFC tag.\n\nAdditionally the app shows how to work with encrypted data that needs decryption.</string>
-    <string name="home_fragments">There are 5 icons to click on:\n1 home = this page\n2 read NDEF message\n3 personalize = run all neccessary steps to activate UID mirroring withou user interaction\n4 activate the mirroring of data\n5 write the NDEF template to the tag\n\nNote: This app is working with tag types NTAG213, NTAG215 or NTAG216 only !</string>
+    <string name="home_fragments">There are 5 icons to click on:\n1 home = this page\n2 read NDEF message\n3 personalize = run all necessary steps to activate UID mirroring without user interaction\n4 activate the mirroring of data\n5 write the NDEF template to the tag\n\nNote: This app is working with tag types NTAG213, NTAG215 or NTAG216 only !</string>
     <string name="header_read">This app reads an NDEF message</string>
     <string name="description_read">This example expects a class 4 type tag with an NDEF record (RTD_TEXT).\n\nWhen a tag is discovered the data from all records will be read.</string>
     <string name="nfc_result">NFC read result</string>
@@ -14,7 +14,10 @@
     <string name="description_activate">Activates the mirroring of data (UID, read counter and MAC) in an NDEF message on tapping</string>
     <string name="description_activate_rg">choose your action</string>
     <string name="header_personalize_tag">Run all steps to personalize a tag for NDEF mirroring</string>
-    <string name="description_personalize_tag">This are the steps that will run when a tag is tapped\n\n1. write the NDEF template to the tag\n2. disable all existing mirror\n3. enable UID mirroring\n4. write the UID-based MAC to the tag</string>
+    <string name="description_personalize_tag">This are the steps that will run when a tag is tapped\n\n1. write the NDEF template to the tag\n2. disable all existing mirror\n3. enable UID mirroring\n4. write the UID-based MAC to the tag\n5. Bocking the tag from write access with a password</string>
     <string name="warning_personalize_tag">The app will IMMEDIATELY write to an attached tag without any further confirmation !</string>
+    <string name="header_backup">Backup and Restore settings</string>
+    <string name="description_backup">Write the settings to a binary file or restores the settings from a binary file (located in external storage like Downloads folder).\nRestoring will overwrite existing settings without further confirmation.</string>
+    <string name="description_backup_rg">Chose your action</string>
 
 </resources>

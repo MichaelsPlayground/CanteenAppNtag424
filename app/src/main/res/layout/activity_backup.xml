@@ -4,19 +4,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ActivateFragment">
+    tools:context=".BackupActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/main_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            android:elevation="@dimen/toolbar_elevation"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:text="@string/header_activate"
+            android:text="@string/header_backup"
             android:textAlignment="center"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -26,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:text="@string/description_activate"
+            android:text="@string/description_backup"
             android:textAlignment="center"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -43,7 +52,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:text="@string/description_activate_rg"
+            android:text="@string/description_backup_rg"
             android:textAlignment="center"
             android:textSize="16sp"
             android:textStyle="normal" />
@@ -56,31 +65,29 @@
             android:orientation="horizontal">
 
             <RadioButton
-                android:id="@+id/rbActivateShowStatus"
+                android:id="@+id/rbBackupBackup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="status" />
+                android:layout_weight="1"
+                android:text="backup preferences" />
 
             <RadioButton
-                android:id="@+id/rbActivateOn"
+                android:id="@+id/rbBackupRestore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="activate" />
-
-            <RadioButton
-                android:id="@+id/rbActivateOff"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="deact." />
-
-            <RadioButton
-                android:id="@+id/rbDisableWriteProtection"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="disable write prot" />
+                android:layout_weight="1"
+                android:text="restore preferences" />
 
         </RadioGroup>
+
+        <Button
+            android:id="@+id/btnBackupRunAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center"
+            android:text="run the chosen action" />
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -99,7 +106,7 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etActivateResult"
+                android:id="@+id/etBackupResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"

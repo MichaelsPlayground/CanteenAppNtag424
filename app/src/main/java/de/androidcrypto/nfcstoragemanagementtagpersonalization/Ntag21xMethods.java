@@ -748,34 +748,37 @@ public class Ntag21xMethods {
         Log.d(TAG, printData("password", password)  + printData(" pack", pack));
 
         // to disable the password protection we need to authenticate first with the old password and verified by old pack
-xx
+        boolean success = authenticatePassword(nfcA, password, pack);
+        if (success) {
+            writeToUiAppend(textView, "The tag is authenticated, proceed");
+        } else {
+            writeToUiAppend(textView, "The authentication failed, aborted");
+            return false;
+        }
 
         // new value for startProtectionPage
-        int startProtectionPage = 255; // fixed, outside of NTAG's pages that disables the protection
-
-        // as we write a complete page: for pack we need to fill up the bytes 3 + 4 with 0x00
-        byte[] packBytePage = new byte[4];
-        System.arraycopy(pack, 0, packBytePage, 0, 2);
+        int startProtectionPageDefault = 255; // fixed, outside of NTAG's pages that disables the protection
+        byte[] passwordDefault = new byte[4];
+        byte[] packDefault = new byte[4];
 
         // write password to page 43/133/229 (NTAG 213/215/216)
-        byte[] response = writeTagDataResponse(nfcA, passwordPage, password);
-        Log.d(TAG, "write password to tag, " + printData("response", response));
+        byte[] response = writeTagDataResponse(nfcA, passwordPage, passwordDefault);
+        Log.d(TAG, "write default password to tag, " + printData("response", response));
         if (response != null) {
-            Log.d(TAG, "write password SUCCESS");
+            Log.d(TAG, "write default password SUCCESS");
         } else {
-            Log.e(TAG, "FAILURE on writing the password to the tag with " + printData("response", response));
+            Log.e(TAG, "FAILURE on writing the default password to the tag with " + printData("response", response));
             return false;
         }
         // write pack to page 44/134/230 (NTAG 213/215/216)
-        response = writeTagDataResponse(nfcA, packPage, packBytePage);
-        Log.d(TAG, "write pack to tag, " + printData("response", response));
+        response = writeTagDataResponse(nfcA, packPage, packDefault);
+        Log.d(TAG, "write default pack to tag, " + printData("response", response));
         if (response != null) {
-            Log.d(TAG, "write pack SUCCESS");
+            Log.d(TAG, "write default pack SUCCESS");
         } else {
-            Log.e(TAG, "FAILURE on writing the pack to the tag with " + printData("response", response));
+            Log.e(TAG, "FAILURE on writing the default pack to the tag with " + printData("response", response));
             return false;
         }
-
 
         // for handling the auth0 byte data we need to read the configuration pages first
         // the configuration pages are 2 pages before the  password page
@@ -790,7 +793,7 @@ xx
         System.arraycopy(configurationPages, 0, configurationPage0, 0, 4);
         Log.d(TAG, printData("configurationPage0 old", configurationPage0));
         // change byte 03 for AUTH0 data
-        configurationPage0[3] = (byte) (startProtectionPage & 0x0ff);
+        configurationPage0[3] = (byte) (startProtectionPageDefault & 0x0ff);
         Log.d(TAG, printData("configurationPage0 new", configurationPage0));
 
         // write the page back to tag
@@ -825,9 +828,70 @@ xx
           0 = AUTHLIM (continued)
          */
         // this method does NOT change the values of configurationPage2
-        Log.d(TAG, "SUCCESS on setting a write protection");
-        writeToUiAppend(textView, "SUCCESS on setting a write protection");
+        Log.d(TAG, "SUCCESS on disabling a write protection");
+        writeToUiAppend(textView, "SUCCESS on disabling a write protection");
         return true;
+    }
+
+    private boolean authenticatePassword(NfcA nfcA, byte[] password, byte[] pack) {
+        // sanity checks
+        if (textView == null) {
+            System.out.println("enableWriteProtection textView is NULL");
+        } else {
+            System.out.println("enableWriteProtection textView is NOT NULL");
+        }
+        if ((nfcA == null) || (!nfcA.isConnected())) {
+            writeToUiAppend(textView, "NfcA is not available for reading, aborted");
+            return false;
+        }
+        if ((password == null) || (password.length != 4)) {
+            writeToUiAppend(textView, "wrong parameter for password, aborted");
+            return false;
+        }
+        if ((pack == null) || (pack.length != 2)) {
+            writeToUiAppend(textView, "wrong parameter for pack, aborted");
+            return false;
+        }
+        Log.d(TAG, printData("password",password) + " || " + printData("pack", pack));
+        byte[] response;
+        byte[] command = new byte[]{
+                (byte) 0x1B,  // PWD_AUTH
+                password[0],
+                password[1],
+                password[2],
+                password[3]
+        };
+        try {
+            System.out.println("*** sendPwdAuthData before tranceive");
+            response = nfcA.transceive(command); // response should be 16 bytes = 4 pages
+            Log.d(TAG, printData("response", response));
+            if (response == null) {
+                Log.e(TAG, "Error in authenticatePassword, aborted");
+                // either communication to the tag was lost or a NACK was received
+                return false;
+            } else if ((response.length == 1) && ((response[0] & 0x00A) != 0x00A)) {
+                // NACK response according to Digital Protocol/T2TOP
+                // Log and return
+                Log.e(TAG, "Error in authenticatePassword, aborted");
+                return false;
+            } else {
+                // success: response contains (P)ACK or actual data
+            }
+        } catch (TagLostException e) {
+            // Log and return
+            Log.e(TAG, "TagLostException: " + e.getMessage());
+            return false;
+        } catch (IOException e) {
+            Log.e(TAG, "IOException: " + e.getMessage());
+            return false;
+        }
+        if (Arrays.equals(response, pack)) {
+            Log.d(TAG, "The response EQUALS to PACK, authenticated");
+            return true;
+        } else {
+            Log.d(TAG, "The response is DIFFERENT to PACK, NOT authenticated");
+            return false;
+        }
     }
 
 

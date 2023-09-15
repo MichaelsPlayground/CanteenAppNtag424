@@ -79,6 +79,13 @@ Minimum SDK is 26 (Android 8)
 
 android:inputType="text|textNoSuggestions"
 
+## Dependencies
+
+```plaintext
+// https://mvnrepository.com/artifact/com.google.code.gson/gson
+implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
+
+```
 
 ```plaintext
 tag is writable

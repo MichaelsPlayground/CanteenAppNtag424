@@ -3,6 +3,7 @@ package de.androidcrypto.nfcstoragemanagementtagpersonalization;
 import static android.content.Context.MODE_PRIVATE;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
+import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.hexStringToByteArray;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.printData;
 
 import android.content.Intent;
@@ -46,13 +47,15 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
     private String mParam2;
 
     private com.google.android.material.textfield.TextInputEditText resultNfcWriting;
-    private RadioButton rbActivateGetStatus, rbActivateOn, rbActivateOff;
+    private RadioButton rbActivateGetStatus, rbActivateOn, rbActivateOff, rbDisableWriteProtection;
 
     private Ntag21xMethods ntagMethods;
     private NfcAdapter mNfcAdapter;
     private NfcA nfcA;
 
     private int identifiedNtagConfigurationPage; // this  is the stating point for any work on configuration
+    private int identifiedNtagPasswordPage;
+    private int identifiedNtagPackPage;
     private byte[] tagUid; // written by onDiscovered
 
     public ActivateFragment() {
@@ -100,6 +103,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
         rbActivateGetStatus = getView().findViewById(R.id.rbActivateShowStatus);
         rbActivateOn = getView().findViewById(R.id.rbActivateOn);
         rbActivateOff = getView().findViewById(R.id.rbActivateOff);
+        rbDisableWriteProtection = getView().findViewById(R.id.rbDisableWriteProtection);
 
         mNfcAdapter = NfcAdapter.getDefaultAdapter(getView().getContext());
         ntagMethods = new Ntag21xMethods(getActivity(), resultNfcWriting);
@@ -119,23 +123,25 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
             nfcA = NfcA.get(tag);
 
             if (nfcA != null) {
-                writeToUiAppend(resultNfcWriting,"NFC tag is Nfca compatible");
+                writeToUiAppend(resultNfcWriting, "NFC tag is Nfca compatible");
                 nfcA.connect();
                 // check that the tag is a NTAG213/215/216 manufactured by NXP - stop if not
                 String ntagVersion = NfcIdentifyNtag.checkNtagType(nfcA, tag.getId());
                 if ((!ntagVersion.equals("213")) && (!ntagVersion.equals("215")) && (!ntagVersion.equals("216"))) {
-                    writeToUiAppend(resultNfcWriting,"NFC tag is NOT of type NXP NTAG213/215/216, aborted");
+                    writeToUiAppend(resultNfcWriting, "NFC tag is NOT of type NXP NTAG213/215/216, aborted");
                     return;
                 }
 
                 // tagUid
                 tagUid = nfcA.getTag().getId();
-                Log.d(TAG,  printData("tagUid", tagUid));
+                Log.d(TAG, printData("tagUid", tagUid));
                 int nfcaMaxTransceiveLength = nfcA.getMaxTransceiveLength(); // important for the readFast command
                 Log.d(TAG, "nfcaMaxTransceiveLength: " + nfcaMaxTransceiveLength);
                 int ntagPages = NfcIdentifyNtag.getIdentifiedNtagPages();
                 identifiedNtagConfigurationPage = NfcIdentifyNtag.getIdentifiedNtagConfigurationPage();
                 writeToUiAppend(resultNfcWriting, "The configuration is starting in page " + identifiedNtagConfigurationPage);
+                identifiedNtagPasswordPage = NfcIdentifyNtag.getIdentifiedNtagPasswordPage();
+                identifiedNtagPackPage = NfcIdentifyNtag.getIdentifiedNtagPackPage();
                 int ntagMemoryBytes = NfcIdentifyNtag.getIdentifiedNtagMemoryBytes();
                 String tagIdString = Utils.getDec(tag.getId());
                 String nfcaContent = "raw data of " + NfcIdentifyNtag.getIdentifiedNtagType() + "\n" +
@@ -154,6 +160,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                 boolean isGetActivateStatus = rbActivateGetStatus.isChecked();
                 boolean isActivateOn = rbActivateOn.isChecked();
                 boolean isActivateOff = rbActivateOff.isChecked();
+                boolean isDisableWriteProtection = rbDisableWriteProtection.isChecked();
 
                 if (isGetActivateStatus) {
                     //response = getStatusUidMirrorNdef(nfcA);
@@ -183,16 +190,14 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                     // both values need to be > 1
                     writeToUiAppend(resultNfcWriting, "positionUidMatch: " + positionUidMatch + " || positionMacMatch: " + positionMacMatch);
                     if ((positionUidMatch < 1) || (positionMacMatch < 1)) {
-                        writeToUiAppend(resultNfcWriting, "Error - insufficient positions found, aborted");;
+                        writeToUiAppend(resultNfcWriting, "Error - insufficient positions found, aborted");
+                        ;
                     } else {
                         writeToUiAppend(resultNfcWriting, "positive match positions, now checking enabled mirroring");
                     }
-
-
                     byte[] shortenedHash = ntagMethods.getUidHashShort(tagUid);
                     writeToUiAppend(resultNfcWriting, "tagUid: " + Utils.bytesToHexNpe(tagUid));
                     writeToUiAppend(resultNfcWriting, "shortenedMAC: " + Utils.bytesToHexNpe(shortenedHash));
-
 
                     // now we are reading the configuration
                     //int mirrorPosition = checkUidMirrorStatus(nfcA, identifiedNtagConfigurationPage);
@@ -205,7 +210,6 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                     } else {
                         writeToUiAppend(resultNfcWriting, "status of the UID mirror: SUCCESS - code: " + Utils.bytesToHexNpe(response));
                     }
-
                 }
                 if (isActivateOn) {
                     // for activating we need to find the positions where to place the mirror data
@@ -272,23 +276,33 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                         writeToUiAppend(resultNfcWriting, "Disabling ALL mirror: SUCCESS");
                     }
                 }
+                if (isDisableWriteProtection) {
+                    boolean resultDisableWriteProtection = ntagMethods.disableWriteProtection(nfcA, TAG_PASSWORD, TAG_PACK, identifiedNtagPasswordPage, identifiedNtagPackPage);
+                    if (!resultDisableWriteProtection) {
+                        writeToUiAppend(resultNfcWriting, "Disabling write protection: FAILURE");
+                        return;
+                    } else {
+                        writeToUiAppend(resultNfcWriting, "Disabling write protection: SUCCESS");
+                    }
+                }
             }
         } catch (IOException e) {
             writeToUiAppend(resultNfcWriting, "ERROR: IOException " + e.toString());
             e.printStackTrace();
         } finally {
-        try {
-            nfcA.close();
-        } catch (IOException e) {
-            writeToUiAppend(resultNfcWriting, "ERROR: IOException " + e.toString());
-            e.printStackTrace();
+            try {
+                nfcA.close();
+            } catch (IOException e) {
+                writeToUiAppend(resultNfcWriting, "ERROR: IOException " + e.toString());
+                e.printStackTrace();
+            }
         }
-    }
         doVibrate(getActivity());
     }
 
     /**
      * reads a value/String from SharedPreferences
+     *
      * @param preferenceName
      * @param preferenceHeader
      * @param preferenceFooter
@@ -319,6 +333,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
 
     /**
      * returns the position of a placeholder ('matchString') within a string
+     *
      * @param content
      * @param matchString
      * @return
