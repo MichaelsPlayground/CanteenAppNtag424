@@ -748,8 +748,10 @@ public class Ntag21xMethods {
         Log.d(TAG, printData("password", password)  + printData(" pack", pack));
 
         // to disable the password protection we need to authenticate first with the old password and verified by old pack
+xx
 
-
+        // new value for startProtectionPage
+        int startProtectionPage = 255; // fixed, outside of NTAG's pages that disables the protection
 
         // as we write a complete page: for pack we need to fill up the bytes 3 + 4 with 0x00
         byte[] packBytePage = new byte[4];
