@@ -1,5 +1,6 @@
 package de.androidcrypto.nfcstoragemanagementtagpersonalization;
 
+import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.printData;
 
@@ -11,6 +12,7 @@ import android.nfc.tech.NfcA;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +21,8 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -46,6 +50,10 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
     private Ndef ndef;
 
     private int identifiedNtagConfigurationPage; // this  is the stating point for any work on configuration
+    private int identifiedNtagCapabilityContainerPage;
+    private int identifiedNtagPasswordPage;
+    private int identifiedNtagPackPage;
+
     private byte[] tagUid; // written by onDiscovered
 
     public PersonalizeTagFragment() {
@@ -117,9 +125,11 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting,"NFC tag is not writable, aborted");
             return false;
         }
+        Log.d(TAG, "tag is writable");
 
         // step 1 c: build the template string
-        String templateUrlString = preferencesHandling.getPreferencesString(NdefSettingsFragment.PREFS_TEMPLATE_URL_NAME);
+        String templateUrlString = preferencesHandling.getPreferencesString(PREFS_TEMPLATE_URL_NAME);
+        Log.d(TAG, "templateUrlString: " + templateUrlString);
         if (TextUtils.isEmpty(templateUrlString)) {
             writeToUiAppend(resultNfcWriting, "could not get the templateUrlString, aborted");
             writeToUiAppend(resultNfcWriting, "Did you forget to save the NDEF settings ?");
@@ -132,6 +142,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "could not write the templateUrlString with NDEF, aborted");
             return false;
         }
+        Log.d(TAG, "templateUrlString written to the tag");
 
         // step 2: connect to NcfA and disable all mirrors
         // step 2 a: connect to NcfA
@@ -140,6 +151,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "could not connect with NcfA, aborted");
             return false;
         }
+        Log.d(TAG, "connected to the  tag using NfcA technology");
 
         // step 2 b: get the UID of the tag
         byte[] tagUid = ntagMethods.getTagUid(discoveredTag);
@@ -147,6 +159,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting,"could not retrieve the UID of the tag, aborted");
             return false;
         }
+        Log.d(TAG, printData("tagUid", tagUid));
         writeToUiAppend(resultNfcWriting, Utils.printData("UID", tagUid));
 
         // step 2 c: identify the tag
@@ -155,17 +168,21 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting,"NFC tag is NOT of type NXP NTAG213/215/216, aborted");
             return false;
         }
+        Log.d(TAG, "tag is of type NTAG213/215/216");
 
         // step 2 d: get technical data of NTAG
         int nfcaMaxTransceiveLength = ntagMethods.getTransceiveLength(nfcA);
         if (nfcaMaxTransceiveLength < 1) {
             writeToUiAppend(resultNfcWriting,"maximum transceive length is insufficient, aborted");
             return false;
-
         }
         int ntagPages = NfcIdentifyNtag.getIdentifiedNtagPages();
         identifiedNtagConfigurationPage = NfcIdentifyNtag.getIdentifiedNtagConfigurationPage();
+        Log.d(TAG, "The configuration is starting in page " + identifiedNtagConfigurationPage);
         writeToUiAppend(resultNfcWriting, "The configuration is starting in page " + identifiedNtagConfigurationPage);
+        identifiedNtagCapabilityContainerPage = NfcIdentifyNtag.getIdentifiedNtagCapabilityContainerPage();
+        identifiedNtagPasswordPage = NfcIdentifyNtag.getIdentifiedNtagPasswordPage();
+        identifiedNtagPackPage = NfcIdentifyNtag.getIdentifiedNtagPackPage();
 
         // step 2 d: disabling all counters
         success = ntagMethods.disableAllMirror(nfcA, identifiedNtagConfigurationPage);
@@ -173,23 +190,29 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "could not disable all mirrors, aborted");
             return false;
         }
+        Log.d(TAG, "All mirroring was disabled");
 
         // step 3 enable UID mirroring
         // step 3 a:
-        int maximumBytesToRead = NdefSettingsFragment.NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
+        int maximumBytesToRead = NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
         byte[] ntagMemory = ntagMethods.readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTransceiveLength);
         if ((ntagMemory == null) || (ntagMemory.length < 10)) {
             writeToUiAppend(resultNfcWriting, "Error - could not read enough data from tag, aborted");
             return false;
         }
+        Log.d(TAG, printData("ntagMemory", ntagMemory));
+        String ntagDataString = new String(ntagMemory, StandardCharsets.UTF_8);
+        writeToUiAppend(resultNfcWriting, "ntagDataString:\n" + ntagDataString);
 
         // step 3 b: read the placeholder names from the shared preferences
-        String uidMatchString = preferencesHandling.getPreferencesMatchString(NdefSettingsFragment.PREFS_UID_NAME, NdefSettingsFragment.UID_HEADER, NdefSettingsFragment.UID_FOOTER);
-        String macMatchString = preferencesHandling.getPreferencesMatchString(NdefSettingsFragment.PREFS_MAC_NAME, NdefSettingsFragment.MAC_HEADER, NdefSettingsFragment.MAC_FOOTER);
-
+        String uidMatchString = preferencesHandling.getPreferencesMatchString(PREFS_UID_NAME, UID_HEADER, UID_FOOTER);
+        String macMatchString = preferencesHandling.getPreferencesMatchString(PREFS_MAC_NAME, MAC_HEADER, MAC_FOOTER);
+        Log.d(TAG, "uidMatchString: " + uidMatchString);
+        Log.d(TAG, "macMatchString: " + macMatchString);
         // search for match strings and add length of match string for the next position to write the data
-        int positionUidMatch = preferencesHandling.getPlaceholderPosition(templateUrlString, uidMatchString);
-        int positionMacMatch = preferencesHandling.getPlaceholderPosition(templateUrlString, macMatchString);
+        int positionUidMatch = preferencesHandling.getPlaceholderPosition(ntagDataString, uidMatchString);
+        int positionMacMatch = preferencesHandling.getPlaceholderPosition(ntagDataString, macMatchString);
+        Log.d(TAG, "positionUidMatch: " + positionUidMatch + " positionMacMatch: " + positionMacMatch);
         // both values need to be > 1
         writeToUiAppend(resultNfcWriting, "positionUidMatch: " + positionUidMatch + " || positionMacMatch: " + positionMacMatch);
         if ((positionUidMatch < 1) || (positionMacMatch < 1)) {
@@ -198,6 +221,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         } else {
             writeToUiAppend(resultNfcWriting, "positive matching positions, now enable mirroring");
         }
+        Log.d(TAG, "positive matching positions, now enable mirroring");
 
         // step 3 c: enable UID counter
         success = ntagMethods.enableUidMirror(nfcA, identifiedNtagConfigurationPage, positionUidMatch);
@@ -205,9 +229,11 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "could not enable UID mirror, aborted");
             return false;
         }
+        Log.d(TAG, "UID mirror was enabled on position: " + positionUidMatch);
 
         // step 3 d: calculate the MAC from uid using SHA-256 and shortened to 8 bytes length
         byte[] shortenedHash = ntagMethods.getUidHashShort(tagUid);
+        Log.d(TAG, printData("shortenedHash", shortenedHash));
         writeToUiAppend(resultNfcWriting, printData("shortenedHash", shortenedHash));
 
         // step 3 e: write mac to tag
@@ -216,7 +242,19 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "could not write MAC, aborted");
             return false;
         }
+        Log.d(TAG, "MAC was written with success on position: " + positionMacMatch);
+
+        // todo enable write access by password/pack beginning at Compatibility container page
+
+        success = ntagMethods.enableWriteProtection(nfcA, TAG_PASSWORD, TAG_PACK, identifiedNtagCapabilityContainerPage, identifiedNtagPasswordPage, identifiedNtagPackPage);
+        if (!success) {
+            writeToUiAppend(resultNfcWriting, "could not enable write protection, aborted");
+            return false;
+        }
+        Log.d(TAG, "write protection was enabled, beginning with page " + identifiedNtagCapabilityContainerPage);
+
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");
+        Log.d(TAG, "The tag was personalized with SUCCESS");
         return true;
     }
 

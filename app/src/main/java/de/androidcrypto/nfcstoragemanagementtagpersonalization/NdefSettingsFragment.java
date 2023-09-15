@@ -1,6 +1,7 @@
 package de.androidcrypto.nfcstoragemanagementtagpersonalization;
 
 import static android.content.Context.MODE_PRIVATE;
+import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
 
 import android.content.Intent;
@@ -51,16 +52,16 @@ public class NdefSettingsFragment extends Fragment implements NfcAdapter.ReaderC
     public static final int UID_LENGTH = 14; // hex encoding
     //public static final int READ_COUNTER_LENGTH = 12; // hex encoding
     public static final int MAC_LENGTH = 8; // hex encoding
-    public static final String UID_HEADER = "?";
-    public static String UID_NAME = "";
-    public static final String UID_FOOTER = "=";
-    public static final String UID_TEMPLATE = "11111111111111";
+    //public static final String UID_HEADER = "?";
+    //public static String UID_NAME = "";
+    //public static final String UID_FOOTER = "=";
+    //public static final String UID_TEMPLATE = "11111111111111";
     //public static final String READ_COUNTER_TEMPLATE = "111111111111";
-    public static final String MAC_HEADER = "&";
-    public static String MAC_NAME = "";
-    public static final String MAC_FOOTER = "=";
-    public static final String MAC_TEMPLATE = "22222222";
-
+    //public static final String MAC_HEADER = "&";
+    //public static String MAC_NAME = "";
+    //public static final String MAC_FOOTER = "=";
+    //public static final String MAC_TEMPLATE = "22222222";
+/*
     private static String ndefTemplateString = "";
     private static final String NDEF_BASE_URL_TEMPLATE = "http://fluttercrypto.bplaced.net/apps/ntag/get_reg3.php";
     public static final int NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH = 137; // maximum length of an NDEF message on a NTAG213
@@ -69,6 +70,8 @@ public class NdefSettingsFragment extends Fragment implements NfcAdapter.ReaderC
     public static final String PREFS_UID_NAME = "uid";
     public static final String PREFS_MAC_NAME = "mac";
     public static final String PREFS_TEMPLATE_URL_NAME = "templateUrl";
+*/
+    private static String ndefTemplateString = "";
 
     private NfcAdapter mNfcAdapter;
 

@@ -1,7 +1,9 @@
 package de.androidcrypto.nfcstoragemanagementtagpersonalization;
 
 import static android.content.Context.MODE_PRIVATE;
+import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
+import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.printData;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -128,7 +130,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
 
                 // tagUid
                 tagUid = nfcA.getTag().getId();
-
+                Log.d(TAG,  printData("tagUid", tagUid));
                 int nfcaMaxTransceiveLength = nfcA.getMaxTransceiveLength(); // important for the readFast command
                 Log.d(TAG, "nfcaMaxTransceiveLength: " + nfcaMaxTransceiveLength);
                 int ntagPages = NfcIdentifyNtag.getIdentifiedNtagPages();
@@ -161,7 +163,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                     // build the matching strings for ud and mac
 
                     // read the content of the the tag to find the match strings, for this we are reading the complete NDEF content
-                    int maximumBytesToRead = NdefSettingsFragment.NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
+                    int maximumBytesToRead = NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
                     //ntagMemory = readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTranceiveLength);
                     ntagMemory = ntagMethods.readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTransceiveLength);
                     if ((ntagMemory == null) || (ntagMemory.length < 10)) {
@@ -172,8 +174,8 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                     writeToUiAppend(resultNfcWriting, "ntagDataString:\n" + ntagDataString);
 
                     // read the placeholder names from the shared preferences
-                    String uidMatchString = getPreferencesMatchString(NdefSettingsFragment.PREFS_UID_NAME, NdefSettingsFragment.UID_HEADER, NdefSettingsFragment.UID_FOOTER);
-                    String macMatchString = getPreferencesMatchString(NdefSettingsFragment.PREFS_MAC_NAME, NdefSettingsFragment.MAC_HEADER, NdefSettingsFragment.MAC_FOOTER);
+                    String uidMatchString = getPreferencesMatchString(PREFS_UID_NAME, UID_HEADER, UID_FOOTER);
+                    String macMatchString = getPreferencesMatchString(PREFS_MAC_NAME, MAC_HEADER, MAC_FOOTER);
 
                     // search for match strings and add length of match string for the next position to write the data
                     int positionUidMatch = getPlaceholderPosition(ntagDataString, uidMatchString);
@@ -185,6 +187,12 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                     } else {
                         writeToUiAppend(resultNfcWriting, "positive match positions, now checking enabled mirroring");
                     }
+
+
+                    byte[] shortenedHash = ntagMethods.getUidHashShort(tagUid);
+                    writeToUiAppend(resultNfcWriting, "tagUid: " + Utils.bytesToHexNpe(tagUid));
+                    writeToUiAppend(resultNfcWriting, "shortenedMAC: " + Utils.bytesToHexNpe(shortenedHash));
+
 
                     // now we are reading the configuration
                     //int mirrorPosition = checkUidMirrorStatus(nfcA, identifiedNtagConfigurationPage);
@@ -203,7 +211,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                     // for activating we need to find the positions where to place the mirror data
                     // read the content of the the tag to find the match strings, for this we are reading the complete NDEF content
                     // note that this can fail is a mirror is active on the tag that overwrites the placeholders
-                    int maximumBytesToRead = NdefSettingsFragment.NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
+                    int maximumBytesToRead = NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
                     //ntagMemory = readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTranceiveLength);
                     ntagMemory = ntagMethods.readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTransceiveLength);
                     if ((ntagMemory == null) || (ntagMemory.length < 10)) {
@@ -214,8 +222,8 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                     writeToUiAppend(resultNfcWriting, "ntagDataString:\n" + ntagDataString);
 
                     // read the placeholder names from the shared preferences
-                    String uidMatchString = getPreferencesMatchString(NdefSettingsFragment.PREFS_UID_NAME, NdefSettingsFragment.UID_HEADER, NdefSettingsFragment.UID_FOOTER);
-                    String macMatchString = getPreferencesMatchString(NdefSettingsFragment.PREFS_MAC_NAME, NdefSettingsFragment.MAC_HEADER, NdefSettingsFragment.MAC_FOOTER);
+                    String uidMatchString = getPreferencesMatchString(PREFS_UID_NAME, UID_HEADER, UID_FOOTER);
+                    String macMatchString = getPreferencesMatchString(PREFS_MAC_NAME, MAC_HEADER, MAC_FOOTER);
 
                     // search for match strings and add length of match string for the next position to write the data
                     int positionUidMatch = getPlaceholderPosition(ntagDataString, uidMatchString);
@@ -223,7 +231,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                     // both values need to be > 1
                     writeToUiAppend(resultNfcWriting, "positionUidMatch: " + positionUidMatch + " || positionMacMatch: " + positionMacMatch);
                     if ((positionUidMatch < 1) || (positionMacMatch < 1)) {
-                        writeToUiAppend(resultNfcWriting, "Error - insufficient positions found, aborted");;
+                        writeToUiAppend(resultNfcWriting, "Error - insufficient positions found, aborted");
                         return;
                     } else {
                         writeToUiAppend(resultNfcWriting, "positive match positions, now enable mirroring");
@@ -289,7 +297,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
     private String getPreferencesMatchString(String preferenceName, String preferenceHeader, String preferenceFooter) {
         String preference = "";
         try {
-            SharedPreferences prefs = requireContext().getSharedPreferences(NdefSettingsFragment.PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
             preference = prefs.getString(preferenceName, null);
             if ((preference == null) || (preference.length() < 1)) {
                 writeToUiAppend(resultNfcWriting, "Please setup the NDEF settings, aborted");

@@ -13,6 +13,9 @@ public class NfcIdentifyNtag {
     private static int identifiedNtagPages = 0; // NTAG 213 = 36, 215 = 126, 216 = 222 pages
     private static int identifiedNtagMemoryBytes = 0; // NTAG 213 = 144, 215 = 504, 216 = 888 bytes
     private static int identifiedNtagConfigurationPage = 0; // NTAG 213 = 41, 215 = 131, 216 = 227 // this is the first configuration page
+    private static int identifiedNtagPasswordPage = 0; // NTAG 213 = 43, 215 = 133, 216 = 229
+    private static int identifiedNtagPackPage = 0; // NTAG 213 = 44, 215 = 134, 216 = 230
+    private static int identifiedNtagCapabilityContainerPage = 3; // fixed to 3 for all NTAG21x
     private static byte[] identifiedNtagId = new byte[0];
 
     // data show here are from NXP NTAG21x data sheet
@@ -72,7 +75,7 @@ public class NfcIdentifyNtag {
                 return returnCode; // not produced by NXP
             }
              */
-            Log.d(TAG, Utils.printData("tag.UID", response));
+            Log.d(TAG, Utils.printData("tagIdentifierResponse", response));
             // get version
             response = nfca.transceive(new byte[] {
                     (byte) 0x60 // GET VERSION
@@ -84,6 +87,8 @@ public class NfcIdentifyNtag {
                 identifiedNtagPages = 36;
                 identifiedNtagConfigurationPage = 41;
                 identifiedNtagMemoryBytes = 144;
+                identifiedNtagPasswordPage = 43;
+                identifiedNtagPackPage = 44;
             }
             if (Arrays.equals(response, ntag215VersionData)) {
                 returnCode = "215";
@@ -91,6 +96,8 @@ public class NfcIdentifyNtag {
                 identifiedNtagPages = 126;
                 identifiedNtagConfigurationPage = 131;
                 identifiedNtagMemoryBytes = 504;
+                identifiedNtagPasswordPage = 133;
+                identifiedNtagPackPage = 134;
             }
             if (Arrays.equals(response, ntag216VersionData)) {
                 returnCode = "216";
@@ -98,6 +105,8 @@ public class NfcIdentifyNtag {
                 identifiedNtagPages = 222;
                 identifiedNtagConfigurationPage = 227;
                 identifiedNtagMemoryBytes = 888;
+                identifiedNtagPasswordPage = 229;
+                identifiedNtagPackPage = 230;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -118,6 +127,18 @@ public class NfcIdentifyNtag {
     }
 
     public static int getIdentifiedNtagMemoryBytes() { return identifiedNtagMemoryBytes; }
+
+    public static int getIdentifiedNtagPasswordPage() {
+        return identifiedNtagPasswordPage;
+    }
+
+    public static int getIdentifiedNtagPackPage() {
+        return identifiedNtagPackPage;
+    }
+
+    public static int getIdentifiedNtagCapabilityContainerPage() {
+        return identifiedNtagCapabilityContainerPage;
+    }
 
     public static byte[] getIdentifiedNtagId() { return identifiedNtagId; }
 

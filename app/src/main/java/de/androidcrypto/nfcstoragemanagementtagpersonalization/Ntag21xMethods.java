@@ -1,5 +1,6 @@
 package de.androidcrypto.nfcstoragemanagementtagpersonalization;
 
+import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.printData;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.testBit;
 
 import android.app.Activity;
@@ -329,6 +330,7 @@ public class Ntag21xMethods {
             writeToUiAppend(textView, "wrong parameter for pageOfConfiguration, aborted");
             return false;
         }
+        Log.d(TAG, "pageOfConfiguration: " + pageOfConfiguration + " positionOfUid: " + positionOfUid);
         // read configuration page 0
         byte[] readPageResponse = getTagDataResponse(nfcA, pageOfConfiguration);
         int position = -1;
@@ -350,7 +352,8 @@ public class Ntag21xMethods {
             // now we are converting the relative position of MAC mirror in 'page' and 'position in page'
             int newMirrorPage = 4 + (positionOfUid / 4); // NTAG 21x has 4 header pages
             writeToUiAppend(textView, "newPage: " + newMirrorPage);
-            int positionInPage = (positionOfUid / 4) - ((newMirrorPage - 4) * 4);
+            //int positionInPage = (positionOfUid / 4) - ((newMirrorPage - 4) * 4);
+            int positionInPage = (positionOfUid) - ((newMirrorPage - 4) * 4);
             writeToUiAppend(textView, "positionInPage: " + positionInPage);
             // set the bits depending on positionÍnPage - this could be more elegant but...
             if (positionInPage == 0) {
@@ -479,6 +482,8 @@ public class Ntag21xMethods {
             writeToUiAppend(textView, "wrong parameter for macPosition, aborted");
             return false;
         }
+        Log.d(TAG, "pageOfConfiguration: " + pageOfConfiguration + printData(" shortenedMacToWrite", shortenedMacToWrite)  + " macPosition: " + macPosition);
+
         // get the hex encoded data of the first 4 bytes
         byte[] shortenedMac = Utils.bytesToHexNpe(shortenedMacToWrite).getBytes(StandardCharsets.UTF_8);
 
@@ -577,6 +582,252 @@ public class Ntag21xMethods {
             return false;
         }
     }
+
+    /**
+     * enables the write protection on a NTAG21x tag beginning with startProtectionPage
+     * The password and pack are necessary for later disabling the tag
+     * @param nfcA
+     * @param password (exact 4 bytes length)
+     * @param pack (exact 2 bytes length)
+     * @param startProtectionPage (minimum page 3, maximum depends on tag type and is not verified)
+     * @param passwordPage (value depends on tag type and is not verified)
+     * @param packPage (value depends on tag type and is not verified)
+     * @return
+     */
+    public boolean enableWriteProtection(NfcA nfcA, byte[] password, byte[] pack, int startProtectionPage, int passwordPage, int packPage) {
+        // sanity checks
+        if (textView == null) {
+            System.out.println("enableWriteProtection textView is NULL");
+        } else {
+            System.out.println("enableWriteProtection textView is NOT NULL");
+        }
+        if ((nfcA == null) || (!nfcA.isConnected())) {
+            writeToUiAppend(textView, "NfcA is not available for reading, aborted");
+            return false;
+        }
+        if (startProtectionPage < 3) {
+            writeToUiAppend(textView, "wrong parameter for startProtectionPage, aborted");
+            return false;
+        }
+        if ((password == null) || (password.length != 4)) {
+            writeToUiAppend(textView, "wrong parameter for password, aborted");
+            return false;
+        }
+        if ((pack == null) || (pack.length != 2)) {
+            writeToUiAppend(textView, "wrong parameter for pack, aborted");
+            return false;
+        }
+        if (passwordPage < 1) {
+            writeToUiAppend(textView, "wrong parameter for passwordPage, aborted");
+            return false;
+        }
+        if (packPage < 1) {
+            writeToUiAppend(textView, "wrong parameter for packPage, aborted");
+            return false;
+        }
+        Log.d(TAG, "startProtectionPage: " + startProtectionPage + " passwordPage: " + passwordPage + " packPage: " + packPage);
+        Log.d(TAG, printData("password", password)  + printData(" pack", pack));
+
+        // as we write a complete page: for pack we need to fill up the bytes 3 + 4 with 0x00
+        byte[] packBytePage = new byte[4];
+        System.arraycopy(pack, 0, packBytePage, 0, 2);
+
+        // write password to page 43/133/229 (NTAG 213/215/216)
+        byte[] response = writeTagDataResponse(nfcA, passwordPage, password);
+        Log.d(TAG, "write password to tag, " + printData("response", response));
+        if (response != null) {
+            Log.d(TAG, "write password SUCCESS");
+        } else {
+            Log.e(TAG, "FAILURE on writing the password to the tag with " + printData("response", response));
+            return false;
+        }
+        // write pack to page 44/134/230 (NTAG 213/215/216)
+        response = writeTagDataResponse(nfcA, packPage, packBytePage);
+        Log.d(TAG, "write pack to tag, " + printData("response", response));
+        if (response != null) {
+            Log.d(TAG, "write pack SUCCESS");
+        } else {
+            Log.e(TAG, "FAILURE on writing the pack to the tag with " + printData("response", response));
+            return false;
+        }
+
+
+        // for handling the auth0 byte data we need to read the configuration pages first
+        // the configuration pages are 2 pages before the  password page
+        int configurationPage1 = passwordPage - 2;
+        byte[] configurationPages;
+        configurationPages = getTagDataResponse(nfcA, configurationPage1); // returns the data of 4 pages = 16 bytes
+        if ((configurationPages == null) || (configurationPages.length != 16)) {
+            Log.e(TAG, "FAILURE on reading the configuration pages, aborted");
+            return false;
+        }
+        byte[] configurationPage0 = new byte[4];
+        System.arraycopy(configurationPages, 0, configurationPage0, 0, 4);
+        Log.d(TAG, printData("configurationPage0 old", configurationPage0));
+        // change byte 03 for AUTH0 data
+        configurationPage0[3] = (byte) (startProtectionPage & 0x0ff);
+        Log.d(TAG, printData("configurationPage0 new", configurationPage0));
+
+        // write the page back to tag
+        response = writeTagDataResponse(nfcA, configurationPage1, configurationPage0);
+        Log.d(TAG, "write configurationPage0 to tag, " + printData("response", response));
+        if (response != null) {
+            Log.d(TAG, "write configurationPage0 SUCCESS");
+        } else {
+            Log.e(TAG, "FAILURE on writing the configurationPage0 to the tag with " + printData("response", response));
+            return false;
+        }
+
+        // the configurationPage2 defines what kind of protection (e.g. write or read & write protection) gets enabled
+        // this method will enable the WRITE protection only, see following bit descriptions, so no bit changing is necessary
+        /*
+          data structure in this byte
+          7 = PROT / Password protection, 0 = only write protection,
+                                          1 = read and write protection
+          6 = CFGLCK / Configuration pages lock, 0 = user configuration open to write access,
+                                                 1 = user configuration permanently locked
+          5 = RFUI fixed 0
+          4 = NFC_CNT_EN = NFC counter configuration, 0 = NFC counter disabled
+                                                      1 = NFC counter enabled
+          3 = NFC_CNT_PWD_PROT = NFC counter protection, 0 = NFC counter not protected
+                                                         1 = NFC counter protected:
+              If the NFC counter password protection is enabled, the NFC tag will only respond
+              to a READ_CNT command with the NFC counter value after a valid password verification
+          2 = AUTHLIM / Limitation of negative password verification attempts
+              000b = limiting of negative password verification attempts disabled
+              001b-111b ... maximum number of negative password verification attempts
+          1 = AUTHLIM (continued)
+          0 = AUTHLIM (continued)
+         */
+        // this method does NOT change the values of configurationPage2
+        Log.d(TAG, "SUCCESS on setting a write protection");
+        writeToUiAppend(textView, "SUCCESS on setting a write protection");
+        return true;
+    }
+
+    /**
+     * disables the write protection on a NTAG21x tag
+     * The password and pack are necessary for later disabling the tag
+     * The password and pack are reset to '00000000' / '0000' and the
+     * startProtectionPage is set to 255 (outside of NTAG's pages
+     * @param nfcA
+     * @param password (exact 4 bytes length)
+     * @param pack (exact 2 bytes length)
+     * @param passwordPage (value depends on tag type and is not verified)
+     * @param packPage (value depends on tag type and is not verified)
+     * @return
+     */
+    public boolean disableWriteProtection(NfcA nfcA, byte[] password, byte[] pack, int passwordPage, int packPage) {
+        // sanity checks
+        if (textView == null) {
+            System.out.println("enableWriteProtection textView is NULL");
+        } else {
+            System.out.println("enableWriteProtection textView is NOT NULL");
+        }
+        if ((nfcA == null) || (!nfcA.isConnected())) {
+            writeToUiAppend(textView, "NfcA is not available for reading, aborted");
+            return false;
+        }
+        if ((password == null) || (password.length != 4)) {
+            writeToUiAppend(textView, "wrong parameter for password, aborted");
+            return false;
+        }
+        if ((pack == null) || (pack.length != 2)) {
+            writeToUiAppend(textView, "wrong parameter for pack, aborted");
+            return false;
+        }
+        if (passwordPage < 1) {
+            writeToUiAppend(textView, "wrong parameter for passwordPage, aborted");
+            return false;
+        }
+        if (packPage < 1) {
+            writeToUiAppend(textView, "wrong parameter for packPage, aborted");
+            return false;
+        }
+        Log.d(TAG, "passwordPage: " + passwordPage + " packPage: " + packPage);
+        Log.d(TAG, printData("password", password)  + printData(" pack", pack));
+
+        // to disable the password protection we need to authenticate first with the old password and verified by old pack
+
+
+
+        // as we write a complete page: for pack we need to fill up the bytes 3 + 4 with 0x00
+        byte[] packBytePage = new byte[4];
+        System.arraycopy(pack, 0, packBytePage, 0, 2);
+
+        // write password to page 43/133/229 (NTAG 213/215/216)
+        byte[] response = writeTagDataResponse(nfcA, passwordPage, password);
+        Log.d(TAG, "write password to tag, " + printData("response", response));
+        if (response != null) {
+            Log.d(TAG, "write password SUCCESS");
+        } else {
+            Log.e(TAG, "FAILURE on writing the password to the tag with " + printData("response", response));
+            return false;
+        }
+        // write pack to page 44/134/230 (NTAG 213/215/216)
+        response = writeTagDataResponse(nfcA, packPage, packBytePage);
+        Log.d(TAG, "write pack to tag, " + printData("response", response));
+        if (response != null) {
+            Log.d(TAG, "write pack SUCCESS");
+        } else {
+            Log.e(TAG, "FAILURE on writing the pack to the tag with " + printData("response", response));
+            return false;
+        }
+
+
+        // for handling the auth0 byte data we need to read the configuration pages first
+        // the configuration pages are 2 pages before the  password page
+        int configurationPage1 = passwordPage - 2;
+        byte[] configurationPages;
+        configurationPages = getTagDataResponse(nfcA, configurationPage1); // returns the data of 4 pages = 16 bytes
+        if ((configurationPages == null) || (configurationPages.length != 16)) {
+            Log.e(TAG, "FAILURE on reading the configuration pages, aborted");
+            return false;
+        }
+        byte[] configurationPage0 = new byte[4];
+        System.arraycopy(configurationPages, 0, configurationPage0, 0, 4);
+        Log.d(TAG, printData("configurationPage0 old", configurationPage0));
+        // change byte 03 for AUTH0 data
+        configurationPage0[3] = (byte) (startProtectionPage & 0x0ff);
+        Log.d(TAG, printData("configurationPage0 new", configurationPage0));
+
+        // write the page back to tag
+        response = writeTagDataResponse(nfcA, configurationPage1, configurationPage0);
+        Log.d(TAG, "write configurationPage0 to tag, " + printData("response", response));
+        if (response != null) {
+            Log.d(TAG, "write configurationPage0 SUCCESS");
+        } else {
+            Log.e(TAG, "FAILURE on writing the configurationPage0 to the tag with " + printData("response", response));
+            return false;
+        }
+
+        // the configurationPage2 defines what kind of protection (e.g. write or read & write protection) gets enabled
+        // this method will enable the WRITE protection only, see following bit descriptions, so no bit changing is necessary
+        /*
+          data structure in this byte
+          7 = PROT / Password protection, 0 = only write protection,
+                                          1 = read and write protection
+          6 = CFGLCK / Configuration pages lock, 0 = user configuration open to write access,
+                                                 1 = user configuration permanently locked
+          5 = RFUI fixed 0
+          4 = NFC_CNT_EN = NFC counter configuration, 0 = NFC counter disabled
+                                                      1 = NFC counter enabled
+          3 = NFC_CNT_PWD_PROT = NFC counter protection, 0 = NFC counter not protected
+                                                         1 = NFC counter protected:
+              If the NFC counter password protection is enabled, the NFC tag will only respond
+              to a READ_CNT command with the NFC counter value after a valid password verification
+          2 = AUTHLIM / Limitation of negative password verification attempts
+              000b = limiting of negative password verification attempts disabled
+              001b-111b ... maximum number of negative password verification attempts
+          1 = AUTHLIM (continued)
+          0 = AUTHLIM (continued)
+         */
+        // this method does NOT change the values of configurationPage2
+        Log.d(TAG, "SUCCESS on setting a write protection");
+        writeToUiAppend(textView, "SUCCESS on setting a write protection");
+        return true;
+    }
+
 
     private byte[] getTagDataResponse(NfcA nfcA, int page) {
         byte[] response;

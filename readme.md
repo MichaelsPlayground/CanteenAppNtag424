@@ -28,6 +28,12 @@ The webserver-URL is coded in the NDEF message as a link like the following exam
 
 https://www.example.com/storage/ident&uid=0123456789ABCDEFx112233
 
+http://fluttercrypto.bplaced.net/apps/ntag/get_reg3.php?uid=01020304050607&mac=32bbe378
+
+http://fluttercrypto.bplaced.net/apps/ntag/get_reg3.php?uid=1d424ab9950000&mac=371f46bc (verified)
+
+
+
 The workflow for the management is as follows:
 
 **Preparation before usage*
@@ -72,3 +78,149 @@ Icon / Vector editor: https://editor.method.ac/
 Minimum SDK is 26 (Android 8)
 
 android:inputType="text|textNoSuggestions"
+
+
+```plaintext
+tag is writable
+templateUrlString: http://fluttercrypto.bplaced.net/apps/ntag/get_reg3.php?uid=11111111111111&mac=22222222
+NFC tag discovered
+ndef is connected
+ onsize change changed 
+templateUrlString written to the tag
+ndef was connected, trying to close ndef
+ndef is closed
+connected to the  tag using NfcA technology
+tagUid length: 7 data: 1d424ab9950000
+checkNtagType
+tagIdentifierResponse length: 16 data: 1d424a9db99500002ca30000e1101200
+getVersion length: 8 data: 0004040201000f03
+tag is of type NTAG213/215/216
+The configuration is starting in page 41
+nfcA is connected
+reading page 41: 020000ff000000000000000000000000
+UID length: 7 data: 1d424ab9950000
+response page 41: 0a
+All mirroring was disabled
+ onsize change changed 
+ntagMemory length: 144 data: 0103a00c340355d101515503666c757474657263727970746f2e62706c616365642e6e65742f617070732f6e7461672f6765745f726567332e7068703f7569643d3131313131313131313131313131266d61633d3232323232323232fe000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+uidMatchString: ?uid=
+macMatchString: &mac=
+positionUidMatch: 60 positionMacMatch: 79
+positive matching positions, now enable mirroring
+pageOfConfiguration: 41 positionOfUid: 60
+reading page 41: 020000ff000000000000000000000000
+response page 41: 0a
+UID mirror was enabled on position: 60
+shortenedHash length: 4 data: 371f46bc
+writeMacToNdef textView is NOT NULL
+The configuration is starting in page 41
+pageOfConfiguration: 41 shortenedMacToWrite length: 4 data: 371f46bc macPosition: 79
+reading page 41: 420013ff000000000000000000000000
+reading page 41: 420013ff000000000000000000000000
+reading page 23: 313131266d61633d3232323232323232
+response page 23: 0a
+response page 24: 0a
+SUCCESS on reading page 41 response: 020000ff000000000000000000000000
+reading page 25: 3232323232323232fe00000000000000
+response page 25: 0a
+MAC was written with success on position: 79
+The tag was personalized with SUCCESS
+Called vibrate(int, String, VibrationEffect, AudioAttributes) API - PUID: 10508, PackageName: de.androidcrypto.nfcstoragemanagementtagpersonalization
+semVibrate - PUID: 10508, PackageName: de.androidcrypto.nfcstoragemanagementtagpersonalization, token: android.os.Binder@d79280b, effect: OneShot{mTiming=150, mAmplitude=10}, AudioAttr: null, Mag: -1, TYPE_EXTRA
+mirrorPageByte: 00 (= 0 dec)
+MIRROR content old:  00000010
+SUCCESS on writing page 41 response: 0a
+write page to tag: 0a
+SUCCESS: enabling the UID mirror with response: 0a
+preferenceString: ?uid=
+Do full code cache collection, code=249KB, data=176KB
+After code cache collection, code=247KB, data=142KB
+preferenceString: &mac=
+positionUidMatch: 60 || positionMacMatch: 79
+positive matching positions, now enable mirroring
+SUCCESS on reading page 41 response: 020000ff000000000000000000000000
+mirrorPageByte: 00 (= 0 dec)
+MIRROR content old:  00000010
+Do partial code cache collection, code=251KB, data=146KB
+After code cache collection, code=251KB, data=146KB
+Increasing code cache capacity to 1024KB
+newPage: 19
+positionInPage: 0
+readPageResponse: 420013ff000000000000000000000000
+SUCCESS on writing page 41 response: 0a
+write page to tag: 0a
+SUCCESS: enabling the UID mirror with response: 0a
+shortenedHash length: 4 data: 371f46bc
+SUCCESS on reading page 41 response: 420013ff000000000000000000000000
+mirrorPageByte: 13 (= 19 dec)
+MIRROR content old:  01000010
+newMacPage: 23
+positionInPage: 3
+positionInPage section 3
+SUCCESS on reading page 23 response: 313131266d61633d3232323232323232
+SUCCESS on writing page 23 response: 0a
+write page to tag: 0a
+SUCCESS: enabling the UID mirror with response: 0a
+SUCCESS on writing page 24 response: 0a
+write page to tag: 0a
+SUCCESS: enabling the UID mirror with response: 0a
+SUCCESS on reading page 25 response: 3232323232323232fe00000000000000
+SUCCESS on writing page 25 response: 0a
+write page to tag: 0a
+SUCCESS: enabling the UID mirror with response: 0a
+
+```
+```plaintext
+NFC tag is Nfca compatible
+getVersion length: 8 data: 0004040201000f03
+tagUid length: 7 data: 1d424ab9950000
+nfcaMaxTransceiveLength: 253
+pageOfConfiguration: 41 positionOfUid: 65
+reading page 41: 020000ff000000000000000000000000
+raw data of NTAG213
+number of pages: 36 total memory: 144 bytes
+tag ID: 1d424ab9950000
+tag ID: 643058778653
+maxTranceiveLength: 253 bytes
+response page 41: 0a
+writeMacToNdef textView is NOT NULL
+pageOfConfiguration: 41 shortenedMacToWrite length: 4 data: 371f46bc macPosition: 84
+reading page 41: 520014ff000000000000000000000000
+response page 25: 0a
+ntagDataString:
+�4U�QUfluttercrypto.bplaced.net/apps/ntag/get_reg3.php?uid=11111111111111&mac=22222222�??????????????????????????????????????????????????????????????????????????????????????????????????????
+response page 26: 0a
+preferenceString: ?uid=
+preferenceString: &mac=
+Called vibrate(int, String, VibrationEffect, AudioAttributes) API - PUID: 10508, PackageName: de.androidcrypto.nfcstoragemanagementtagpersonalization
+semVibrate - PUID: 10508, PackageName: de.androidcrypto.nfcstoragemanagementtagpersonalization, token: android.os.Binder@d79280b, effect: OneShot{mTiming=150, mAmplitude=10}, AudioAttr: null, Mag: -1, TYPE_EXTRA
+positionUidMatch: 65 || positionMacMatch: 84
+positive match positions, now enable mirroring
+SUCCESS on reading page 41 response: 020000ff000000000000000000000000
+mirrorPageByte: 00 (= 0 dec)
+MIRROR content old:  00000010
+newPage: 20
+positionInPage: 1
+readPageResponse: 520014ff000000000000000000000000
+SUCCESS on writing page 41 response: 0a
+write page to tag: 0a
+SUCCESS: enabling the UID mirror with response: 0a
+Enabling the UID mirror: SUCCESS
+tagUid: 1d424ab9950000
+shortenedMAC: 371f46bc
+SUCCESS on reading page 41 response: 520014ff000000000000000000000000
+mirrorPageByte: 14 (= 20 dec)
+MIRROR content old:  01010010
+newMacPage: 25
+positionInPage: 0
+positionInPage section 0
+SUCCESS on writing page 25 response: 0a
+write page to tag: 0a
+SUCCESS: enabling the UID mirror with response: 0a
+SUCCESS on writing page 26 response: 0a
+write page to tag: 0a
+SUCCESS: enabling the UID mirror with response: 0a
+writing the MAC: SUCCESS
+
+```
+

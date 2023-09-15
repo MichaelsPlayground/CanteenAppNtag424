@@ -9,17 +9,12 @@ import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.widget.TextView;
 
-/**
- * The class is responsible for storing of data needed for activating or personalization of tags
- * All storage is done in Plaintext in Shared Preferences, consider using Encrypted Shared Preferences for more security
- */
-
-public class PreferencesHandling {
+public class PreferencesHandlingOld {
     private Activity activity;
     private Context context;
     private TextView textView; // used for displaying information's from the methods
 
-    public PreferencesHandling(Activity activity, Context context, TextView textView) {
+    public PreferencesHandlingOld(Activity activity, Context context, TextView textView) {
         this.activity = activity;
         this.context = context;
         this.textView = textView;

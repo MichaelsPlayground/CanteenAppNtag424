@@ -1,6 +1,7 @@
 package de.androidcrypto.nfcstoragemanagementtagpersonalization;
 
 import static android.content.Context.MODE_PRIVATE;
+import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
 import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.testBit;
 
@@ -168,7 +169,7 @@ public class ActivateFragmentBeforeDeletionOfMethods extends Fragment implements
                     // build the matching strings for ud and mac
 
                     // read the content of the the tag to find the match strings, for this we are reading the complete NDEF content
-                    int maximumBytesToRead = NdefSettingsFragment.NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
+                    int maximumBytesToRead = NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
                     //ntagMemory = readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTranceiveLength);
                     ntagMemory = ntagMethods.readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTranceiveLength);
                     if ((ntagMemory == null) || (ntagMemory.length < 10)) {
@@ -179,8 +180,8 @@ public class ActivateFragmentBeforeDeletionOfMethods extends Fragment implements
                     writeToUiAppend(resultNfcWriting, "ntagDataString:\n" + ntagDataString);
 
                     // read the placeholder names from the shared preferences
-                    String uidMatchString = getPreferencesMatchString(NdefSettingsFragment.PREFS_UID_NAME, NdefSettingsFragment.UID_HEADER, NdefSettingsFragment.UID_FOOTER);
-                    String macMatchString = getPreferencesMatchString(NdefSettingsFragment.PREFS_MAC_NAME, NdefSettingsFragment.MAC_HEADER, NdefSettingsFragment.MAC_FOOTER);
+                    String uidMatchString = getPreferencesMatchString(PREFS_UID_NAME, UID_HEADER, UID_FOOTER);
+                    String macMatchString = getPreferencesMatchString(PREFS_MAC_NAME, MAC_HEADER, MAC_FOOTER);
 
                     // search for match strings and add length of match string for the next position to write the data
                     int positionUidMatch = getPlaceholderPosition(ntagDataString, uidMatchString);
@@ -210,7 +211,7 @@ public class ActivateFragmentBeforeDeletionOfMethods extends Fragment implements
                     // for activating we need to find the positions where to place the mirror data
                     // read the content of the the tag to find the match strings, for this we are reading the complete NDEF content
                     // note that this can fail is a mirror is active on the tag that overwrites the placeholders
-                    int maximumBytesToRead = NdefSettingsFragment.NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
+                    int maximumBytesToRead = NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
                     //ntagMemory = readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTranceiveLength);
                     ntagMemory = ntagMethods.readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTranceiveLength);
                     if ((ntagMemory == null) || (ntagMemory.length < 10)) {
@@ -221,8 +222,8 @@ public class ActivateFragmentBeforeDeletionOfMethods extends Fragment implements
                     writeToUiAppend(resultNfcWriting, "ntagDataString:\n" + ntagDataString);
 
                     // read the placeholder names from the shared preferences
-                    String uidMatchString = getPreferencesMatchString(NdefSettingsFragment.PREFS_UID_NAME, NdefSettingsFragment.UID_HEADER, NdefSettingsFragment.UID_FOOTER);
-                    String macMatchString = getPreferencesMatchString(NdefSettingsFragment.PREFS_MAC_NAME, NdefSettingsFragment.MAC_HEADER, NdefSettingsFragment.MAC_FOOTER);
+                    String uidMatchString = getPreferencesMatchString(PREFS_UID_NAME, UID_HEADER, UID_FOOTER);
+                    String macMatchString = getPreferencesMatchString(PREFS_MAC_NAME, MAC_HEADER, MAC_FOOTER);
 
                     // search for match strings and add length of match string for the next position to write the data
                     int positionUidMatch = getPlaceholderPosition(ntagDataString, uidMatchString);
@@ -291,7 +292,7 @@ public class ActivateFragmentBeforeDeletionOfMethods extends Fragment implements
     private String getPreferencesMatchString(String preferenceName, String preferenceHeader, String preferenceFooter) {
         String preference = "";
         try {
-            SharedPreferences prefs = requireContext().getSharedPreferences(NdefSettingsFragment.PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
             preference = prefs.getString(preferenceName, null);
             if ((preference == null) || (preference.length() < 1)) {
                 writeToUiAppend(resultNfcWriting, "Please setup the NDEF settings, aborted");
@@ -328,7 +329,7 @@ public class ActivateFragmentBeforeDeletionOfMethods extends Fragment implements
      * @return
      */
     private byte[] readNdefContentOld(NfcA nfcA, int numberOfBytesToRead, int nfcaMaxTranceiveLength ) {
-        int maximumBytesToRead = NdefSettingsFragment.NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
+        int maximumBytesToRead = NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
         int nfcaMaxTranceive4ByteTrunc = nfcaMaxTranceiveLength / 4; // 63
         int nfcaMaxTranceive4ByteLength = nfcaMaxTranceive4ByteTrunc * 4; // 252 bytes
         int nfcaNrOfFullReadings = maximumBytesToRead / nfcaMaxTranceive4ByteLength;
