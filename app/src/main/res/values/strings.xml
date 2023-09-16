@@ -19,5 +19,8 @@
     <string name="header_backup">Backup and Restore settings</string>
     <string name="description_backup">Write the settings to a binary file or restores the settings from a binary file (located in external storage like Downloads folder).\nRestoring will overwrite existing settings without further confirmation.</string>
     <string name="description_backup_rg">Chose your action</string>
+    <string name="header_bulk">Bulk registration of tags</string>
+    <string name="description_bulk">Register tags for backend server using an export file</string>
+    <string name="description_bulk_rg">rg inf</string>
 
 </resources>

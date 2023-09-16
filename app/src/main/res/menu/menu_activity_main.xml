@@ -11,6 +11,11 @@
         app:showAsAction="never"/>
 
     <item
+        android:id="@+id/action_bulk_registration"
+        android:title="bulk registration"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/action_export_text_file"
         android:title="Export text File"
         app:showAsAction="never"/>

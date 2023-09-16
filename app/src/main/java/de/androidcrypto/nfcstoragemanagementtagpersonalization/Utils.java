@@ -15,7 +15,9 @@ import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class Utils {
 
@@ -138,6 +140,12 @@ public class Utils {
             factor *= 256l;
         }
         return result + "";
+    }
+
+    static boolean listContains(List<byte[]> arrays, byte[] other) {
+        for (byte[] b : arrays)
+            if (Arrays.equals(b, other)) return true;
+        return false;
     }
 
     public static String parseTextrecordPayload(byte[] ndefPayload) {

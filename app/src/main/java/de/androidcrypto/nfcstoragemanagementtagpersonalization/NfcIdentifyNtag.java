@@ -69,7 +69,7 @@ public class NfcIdentifyNtag {
             byte[] uid0 = Arrays.copyOfRange(response, 0, 1);
             //nfcaContentString = nfcaContentString + "\n" + " Uid pos 00: " + bytesToHex(uid0);
 
-            // todo There is hard coded check for NXP produced tags but there are more companies
+            // todo This is a hard coded check for NXP produced tags but there are more companies
             /*
             if (!Arrays.equals(uid0, new byte[]{(byte) 0x04})) {
                 return returnCode; // not produced by NXP
