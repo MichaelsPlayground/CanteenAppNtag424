@@ -11,10 +11,29 @@ component.
 2) **backend internet server**: The smartphone sends the data to the backend server (like a synchronization) where they are 
 additionally stored. The actual reason for using an internet server is the access by a personal computer.
 3) **personal computer**: As it is a challenge to enter or edit a lot of text a personal computer access is the better way 
-to handle and enter all the informations regarding the storing goods. Maybe you are having a Word or Pages document with the 
-content information and now you can easilly copy and paste the data 
+to handle and enter all the information regarding the storing goods. Maybe you are having a Word or Pages document with the 
+content information and now you can easily copy and paste the data 
 
 
+
+## Bulk Registration of tag UIDs
+
+The backend server works on registered tags only. The most common way to register a new tag - after the tag was personalized - 
+is to simply tap the tag to the smartphone with enabled internet connection. It will open a browser and calls a page that 
+registers the tag UID on the backend server.
+
+This workflow may be good for some new tags but when setting up a new storage management with a lot of existing goods and 
+tags you better use this activity. By tapping the personalized tags to the smartphone one after another an internal list with 
+tagUIDs fills up and when you're finished press the **EXPORT REGISTRATION LIST button**. A file chooser opens and directs 
+to a directory in external storage like "Download" with a predefined filename "bulk.dat". After pressing "save" in the chooser 
+a new file is created, containing all tagUIDs separated by a 'new line' character. Use this list as a source for the 
+"upload tagUID list function" in the backend server menu.
+
+If the same tag is tapped twice this is noticed and the tag is not added to the list. This is working on the tag data registered 
+with this activity lifetime. There is NO check here if the tag was previously registered on the backend server, but this check 
+is done during backend server import.
+
+If you leave the activity by returning to home menu the tags registered so far gets deleted.  
 
 ## Note on this description
 

@@ -52,7 +52,7 @@ public class BulkRegistrationActivity extends AppCompatActivity implements NfcAd
     private int numberOfTagsInt = 0;
 
     private PreferencesHandling prefs;
-    private String exportString = "BackStorePers"; // takes the log data for export
+    private String exportString = ""; // takes the list of tagUids in hex encoding, separated by a new line
     private byte[] exportData, importData;
     private String exportStringFileName = "bulk.dat"; // takes the log data for export
 
@@ -78,6 +78,24 @@ public class BulkRegistrationActivity extends AppCompatActivity implements NfcAd
         runAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                exportString = "";
+                int numberOfTagInList = tagUidList.size();
+                if (numberOfTagInList == 0) {
+                    // this should never happen as the  button is enabled on a registration
+                    writeToUiAppend("There are not tagUids registered before, aborted");
+                    return;
+                }
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < numberOfTagInList; i++) {
+                    byte[] uid = tagUidList.get(i);
+                    sb.append(bytesToHexNpe(uid));
+                    if (i < (numberOfTagsInt - 1)) {
+                        sb.append("\n");
+                    }
+                }
+                exportString = sb.toString();
+                writeStringToExternalSharedStorage();
+
                 /*
                 prefs = new PreferencesHandling(BulkRegistrationActivity.this, view.getContext(), result);
                 if (rbBackupBackup.isChecked()) {
@@ -108,6 +126,8 @@ public class BulkRegistrationActivity extends AppCompatActivity implements NfcAd
 
     private void runRegistration() {
         // at this point we are sure it is a NTAG21x
+        // check if the tagUid was registered during THIS activity lifetime
+        // this does NOT check if the tag was registered before on backend server
         if (!Utils.listContains(tagUidList, tagUid)) {
             String uidString = bytesToHexNpe(tagUid);
             tagUidList.add(tagUid);
@@ -121,16 +141,14 @@ public class BulkRegistrationActivity extends AppCompatActivity implements NfcAd
         } else {
             writeToUiAppend("tag is registered before");
         }
-
     }
-
 
 
     /**
      * section for writing data to external storage (backup)
      */
 
-    private void writeByteArrayToExternalSharedStorage() {
+    private void writeStringToExternalSharedStorage() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
@@ -145,15 +163,15 @@ public class BulkRegistrationActivity extends AppCompatActivity implements NfcAd
             writeToUiToast("run the export path before writing the content to a file :-)");
             return;
         }
-        if ((exportData == null) || (exportData.length < 1)) {
+        if ((exportString == null) || (exportString.length() < 1)) {
             writeToUiToast("run the export path before writing the content to a file :-)");
             return;
         }
         intent.putExtra(Intent.EXTRA_TITLE, filename);
-        selectWriteDataFileActivityResultLauncher.launch(intent);
+        selectWriteStringFileActivityResultLauncher.launch(intent);
     }
 
-    ActivityResultLauncher<Intent> selectWriteDataFileActivityResultLauncher = registerForActivityResult(
+    ActivityResultLauncher<Intent> selectWriteStringFileActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
                 @Override
@@ -168,7 +186,7 @@ public class BulkRegistrationActivity extends AppCompatActivity implements NfcAd
                             uri = resultData.getData();
                             // Perform operations on the document using its URI.
                             // the file content is in exportData
-                            writeByteArrayToUri(uri, exportData);
+                            writeTextToUri(uri, exportString);
 
 /*
                             try {
@@ -200,15 +218,19 @@ public class BulkRegistrationActivity extends AppCompatActivity implements NfcAd
         writeToUiToast("file written to external shared storage");
     }
 
-    private void writeTextToUri(Uri uri, String data) throws IOException {
+    private void writeTextToUri(Uri uri, String data) {
         try {
-            System.out.println("** data to write: " + data);
+            Log.d(TAG,"** data to write:\n" + data);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().getContentResolver().openOutputStream(uri));
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
-            System.out.println("Exception File write failed: " + e.toString());
+            Log.e(TAG, "IOException: " + e.getMessage());
+            writeToUiToast("FAILURE on writing to external shared storage");
+            return;
         }
+        writeToUiAppend(result, "SUCCESS on exporting the registration data to " + exportStringFileName);
+        writeToUiToast("file written to external shared storage");
     }
 
     /**
