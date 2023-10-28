@@ -23,7 +23,7 @@
     <string name="description_bulk">Register tags for backend server using an export file</string>
     <string name="description_bulk_rg">rg inf</string>
     <string name="header_charge">Charge a canteen card</string>
-    <string name="description_charge">(Rec-) charge a canteen card with a maximum of 99999 units (999,99 USD)</string>
+    <string name="description_charge">(Re-) charge (credit) a canteen card with a maximum of 99999 units (999,99 USD)</string>
     <string name="description_charge_2">Note: the amount is immediately credited when tapping a tag to the NFC reader</string>
 
 </resources>

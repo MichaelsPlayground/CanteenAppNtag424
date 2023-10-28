@@ -189,12 +189,6 @@ public class Ntag424DnaMethods {
     private static final byte[] HEADER_ENC = new byte[]{(byte) (0x5A), (byte) (0xA5)}; // fixed to 0x5AA5
     private static final byte[] HEADER_MAC = new byte[]{(byte) (0xA5), (byte) (0x5A)}; // fixed to 0x5AA5
 
-    // constants for LRP mode
-    private static final byte[] LRP_FIXED_COUNTER = new byte[]{(byte) (0x00), (byte) (0x01)}; // fixed to 0x0001
-    private static final byte[] LRP_FIXED_LENGTH = new byte[]{(byte) (0x00), (byte) (0x80)}; // fixed to 0x0080
-    private static final byte[] LRP_FIXED_LABEL = new byte[]{(byte) (0x96), (byte) (0x69)}; // fixed to 0x9669
-
-
     private static final byte[] PADDING_FULL = hexStringToByteArray("80000000000000000000000000000000");
 
     public enum CommunicationSettings {
