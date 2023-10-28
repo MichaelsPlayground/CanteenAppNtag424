@@ -7,14 +7,14 @@
         android:title="Home" />
 
     <item
+        android:id="@+id/read"
+        android:icon="@drawable/nfc_icon_r2"
+        android:title="Read" />
+
+    <item
         android:id="@+id/personalize_tag"
         android:icon="@drawable/outline_done_all_24"
         android:title="personalize" />
-
-    <item
-        android:id="@+id/charge"
-        android:icon="@drawable/outline_add_circle_outline_24"
-        android:title="Charge" />
 
     <item
         android:id="@+id/activate"

@@ -59,8 +59,14 @@ public class MainActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         if (itemId == R.id.home) {
             selectedFragment = new HomeFragment();
+            /*
         } else if (itemId == R.id.read) {
             selectedFragment = new ReadFragment();
+             */
+
+        } else if (itemId == R.id.charge) {
+            selectedFragment = new ChargeFragment();
+
         } else if (itemId == R.id.personalize_tag) {
             selectedFragment = new PersonalizeTagFragment();
         } else if (itemId == R.id.activate) {
