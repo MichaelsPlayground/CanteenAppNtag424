@@ -1,10 +1,10 @@
 # Canteen application with NXP's NTAG424DNA tag
 
-This app has xx fragments showing the different handling of data on the tag:
+This app has 4 fragments showing the different handling of data on the tag:
 
 ## 1 home fragment
 
-The **home fragment** is the clients screen providing the value on the tag and the transaction log file.
+The **home fragment** is the clients screen providing the (remaining) value on the tag and the transaction log file.
 
 ## 2 cashier fragment
 
@@ -12,6 +12,11 @@ This is the main workplace for the cashier that is selling goods. The cashier ca
 
 The app is using a very simple goods and and machine logging system (use 256 different product groups and
 cash register numbers).
+
+As the deposit is hosted in a **Value file** there is no real amount but only "units" available. This 
+app is not using a "currency" field. For example, 100 "units" are 100 cent meaning 1 USD or 1 Euro. 
+The **maximum debit value is 99999 units** (e.g. 999,99 USD / Euro), the **minimum debit value is 1 unit**. 
+When (re-) charging the card there is a **maximum deposit amount of 9999999 units** (e.g. 99999,99 USD /Euro).
 
 ## 3 recharge fragment
 
