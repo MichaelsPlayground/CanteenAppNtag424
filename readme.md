@@ -18,7 +18,7 @@ app is not using a "currency" field. For example, 100 "units" are 100 cent meani
 The **maximum debit value is 99999 units** (e.g. 999,99 USD / Euro), the **minimum debit value is 1 unit**. 
 When (re-) charging the card there is a **maximum deposit amount of 9999999 units** (e.g. 99999,99 USD /Euro).
 
-## 3 recharge fragment
+## 3 charge fragment
 
 The canteen card is empty after issuing and needs to get (re-) charged. For security reasons it is a good practise 
 to separate this functionality from the cashier position.
