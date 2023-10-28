@@ -28,6 +28,9 @@ to separate this functionality from the cashier position.
 This fragment prepares the tag for the usage as canteen card:
 
 1) setting of indiviual application keys
+- read data (value file, cyclic record file a standard file)
+- write data (value file, cyclic record file a standard file)
+- read and write data (value file, cyclic record file a standard file)
 2) formats the 3 **Standard files** on the tag for usage:
 a) file number 00 (size: 32 bytes): usage a NDEF compatibility container
 b) file number 01 (size: 256 bytes): usage as card holders data, settings and extended log file
@@ -36,6 +39,12 @@ c) file number 02 (size: 128 bytes): usage as NDEF placeholder for value and las
 4) The file numbers 00 and 02 are in plain communication mode, all other files will operate in full enciphered communication.
 
 Please note that the tag requires a NTAG424DNA tag with fabric settings, especially regarding the application keys.
+
+# data security
+
+This app is a sample application showing the functionality **but not optimized for security**. For example the 
+application keys are not stored securely in a secured keystore but placed in plain static data in source code. 
+Do not use this in a real world application.
 
 
 ## Note: the following description is for a total different app beause I copied the application

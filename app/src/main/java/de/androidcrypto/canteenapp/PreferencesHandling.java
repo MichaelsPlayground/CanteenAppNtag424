@@ -111,7 +111,8 @@ public class PreferencesHandling {
             oos.writeObject(prefs.getAll());
             oos.close();
         } catch (IOException e) {
-            Log.e(TAG, "Error serializing preferences", BuildConfig.DEBUG ? e : null);
+            //Log.e(TAG, "Error serializing preferences", BuildConfig.DEBUG ? e : null);
+            Log.e(TAG, "Error serializing preferences");
             return false;
         } finally {
             // Utils.closeQuietly(oos, os);
@@ -147,7 +148,8 @@ public class PreferencesHandling {
             ois = new ObjectInputStream(is);
             map = (Map) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            Log.e(TAG, "Error deserializing preferences", BuildConfig.DEBUG ? e : null);
+            //Log.e(TAG, "Error deserializing preferences", BuildConfig.DEBUG ? e : null);
+            Log.e(TAG, "Error deserializing preferences");
             return false;
         } finally {
             // Utils.closeQuietly(oos, os);
