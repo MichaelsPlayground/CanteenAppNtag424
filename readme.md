@@ -32,9 +32,9 @@ This fragment prepares the tag for the usage as canteen card:
 - write data (value file, cyclic record file a standard file)
 - read and write data (value file, cyclic record file a standard file)
 2) formats the 3 **Standard files** on the tag for usage:
-a) file number 00 (size: 32 bytes): usage a NDEF compatibility container
-b) file number 01 (size: 256 bytes): usage as card holders data, settings and extended log file
-c) file number 02 (size: 128 bytes): usage as NDEF placeholder for value and last transaction record and a digital signature
+- file number 00 (size: 32 bytes): usage a NDEF compatibility container
+- file number 01 (size: 256 bytes): usage as card holders data, settings and extended log file
+- file number 02 (size: 128 bytes): usage as NDEF placeholder for value and last transaction record and a digital signature
 3) empties the cyclic record file for the confirmed transaction log
 4) The file numbers 00 and 02 are in plain communication mode, all other files will operate in full enciphered communication.
 
