@@ -20,7 +20,7 @@ When (re-) charging the card there is a **maximum deposit amount of 9999999 unit
 
 ## 3 charge fragment
 
-The canteen card is empty after issuing and needs to get (re-) charged. For security reasons it is a good practise 
+The canteen card is empty after issuing and needs to get (re-) charged or credited. For security reasons it is a good practise 
 to separate this functionality from the cashier position.
 
 ## 4 personalization fragment

@@ -22,6 +22,7 @@ import static de.androidcrypto.canteenapp.Constants.UID_NAME;
 import static de.androidcrypto.canteenapp.Constants.UID_TEMPLATE;
 import static de.androidcrypto.canteenapp.Utils.bytesToHexNpe;
 import static de.androidcrypto.canteenapp.Utils.doVibrate;
+import static de.androidcrypto.canteenapp.Utils.printData;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -35,6 +36,7 @@ import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,8 +68,11 @@ public class ChargeFragment extends Fragment implements NfcAdapter.ReaderCallbac
     private String mParam1;
     private String mParam2;
 
+    private static final String LOGTAG = ChargeFragment.class.getName();
     private com.google.android.material.textfield.TextInputEditText chargeAmount, depositAmount;
     private com.google.android.material.textfield.TextInputEditText ndefResultNfcWriting;
+
+    private Button testRecord;
 
     private static String ndefTemplateString = "";
 
@@ -117,7 +122,49 @@ public class ChargeFragment extends Fragment implements NfcAdapter.ReaderCallbac
         chargeAmount = getView().findViewById(R.id.etChargeAmount);
         depositAmount = getView().findViewById(R.id.etChargeDepositAmount);
 
+        testRecord = getView().findViewById(R.id.btnChargeTestRecord);
+        fetchButtonClicks(view);
+
         mNfcAdapter = NfcAdapter.getDefaultAdapter(getView().getContext());
+    }
+
+    private void fetchButtonClicks(View view) {
+
+        testRecord = getView().findViewById(R.id.btnChargeTestRecord);
+        //testNdefSettings = view.findViewById(R.id.btnNdefSettingsTest); // todo check if this is better !
+        testRecord.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // test if the complete template string is correct
+                // we are going to build the template string
+                TransactionRecord tr1 = new TransactionRecord("30092023113344", "A", "C", "012345", (byte) 0x01, (byte) 0x00);
+                Log.d(LOGTAG, "tr1 is valid: " + tr1.isRecordValid());
+                TransactionRecord tr2 = new TransactionRecord("30092023153344", "A", "C", "012345", (byte) 0x01, (byte) 0x00);
+                Log.d(LOGTAG, "tr2 is valid: " + tr2.isRecordValid());
+                Log.d(LOGTAG, printData("tr2", tr2.getRecord()));
+                TransactionRecord tr3 = new TransactionRecord("30092023153344", "a", "C", "012345", (byte) 0x01, (byte) 0x00);
+                Log.d(LOGTAG, "tr3 is valid: " + tr3.isRecordValid());
+                TransactionRecord tr4 = new TransactionRecord("30092023153344", "P", "K", "012345", (byte) 0x01, (byte) 0x00);
+                Log.d(LOGTAG, "tr4 is valid: " + tr4.isRecordValid());
+                TransactionRecord tr5 = new TransactionRecord("30092023153344", "P", "C", "112345", (byte) 0x01, (byte) 0x00);
+                Log.d(LOGTAG, "tr5 is valid: " + tr5.isRecordValid());
+                TransactionRecord tr6 = new TransactionRecord("30092023153344", "P", "C", "0123456", (byte) 0x01, (byte) 0x00);
+                Log.d(LOGTAG, "tr6 is valid: " + tr6.isRecordValid());
+
+                byte[] tr2Array = tr2.getRecord();
+                TransactionRecord tr2Record = new TransactionRecord(tr2Array);
+                Log.d(LOGTAG, "tr2Record is valid: " + tr2Record.isRecordValid());
+                Log.d(LOGTAG, "ts: " + tr2Record.getTimestampShort());
+                Log.d(LOGTAG, "am/pm: " + tr2Record.getAmPmMarker());
+                Log.d(LOGTAG, "cr/de: " + tr2Record.getCreditDebitMarker());
+                Log.d(LOGTAG, "bookingunits: " + tr2Record.getBookingUnits());
+                Log.d(LOGTAG, "machine: " + Utils.byteToHex(tr2Record.getMachineNumber()));
+                Log.d(LOGTAG, "good type: " + Utils.byteToHex(tr2Record.getGoodType()));
+                Log.d(LOGTAG, "reserved: " + Utils.bytesToHexNpe(tr2Record.getReserved()));
+
+
+            }
+        });
     }
 
     /**
