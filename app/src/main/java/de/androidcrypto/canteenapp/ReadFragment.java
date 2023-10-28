@@ -1,7 +1,5 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.playSinglePing;
 
 import android.content.Intent;
 import android.nfc.NdefMessage;
@@ -157,8 +155,8 @@ public class ReadFragment extends Fragment implements NfcAdapter.ReaderCallback 
                 readResult.setText("There was an error in NDEF data");
             });
         }
-        doVibrate(getActivity());
-        playSinglePing(getContext());
+        //doVibrate(getActivity());
+        //playSinglePing(getContext());
     }
 
     private void showWirelessSettings() {

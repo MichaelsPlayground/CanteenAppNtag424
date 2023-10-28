@@ -1,4 +1,39 @@
-# NFC Storage Management Tag Personalization
+# Canteen application with NXP's NTAG424DNA tag
+
+This app has xx fragments showing the different handling of data on the tag:
+
+## 1 home fragment
+
+The **home fragment** is the clients screen providing the value on the tag and the transaction log file.
+
+## 2 cashier fragment
+
+This is the main workplace for the cashier that is selling goods. The cashier can be a vending machine of course.
+
+The app is using a very simple goods and and machine logging system (use 256 different product groups and
+cash register numbers).
+
+## 3 recharge fragment
+
+The canteen card is empty after issuing and needs to get (re-) charged. For security reasons it is a good practise 
+to separate this functionality from the cashier position.
+
+## 4 personalization fragment
+
+This fragment prepares the tag for the usage as canteen card:
+
+1) setting of indiviual application keys
+2) formats the 3 **Standard files** on the tag for usage:
+a) file number 00 (size: 32 bytes): usage a NDEF compatibility container
+b) file number 01 (size: 256 bytes): usage as card holders data, settings and extended log file
+c) file number 02 (size: 128 bytes): usage as NDEF placeholder for value and last transaction record and a digital signature
+3) empties the cyclic record file for the confirmed transaction log
+4) The file numbers 00 and 02 are in plain communication mode, all other files will operate in full enciphered communication.
+
+Please note that the tag requires a NTAG424DNA tag with fabric settings, especially regarding the application keys.
+
+
+## Note: the following description is for a total different app beause I copied the application
 
 This app is having just one purpose - it prepares **NTAG21x tags** for the usage with **NFC Storage Management** app.
 

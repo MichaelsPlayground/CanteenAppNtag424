@@ -1,4 +1,4 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

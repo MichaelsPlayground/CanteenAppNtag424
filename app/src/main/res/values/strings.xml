@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">NFC Storage Management Tag Personalization</string>
+    <string name="app_name">Canteen app NTAG424</string>
     <string name="app_version">0.0.1</string>
-    <string name="home_description">This application reads and writes NDEF messages from/to a NFC tag.\n\nAdditionally the app shows how to work with encrypted data that needs decryption.</string>
+    <string name="home_description">This application is a sample app showing how to use a NTAG424DNA tag for a canteen application.\n\nAdditionally the app shows how to work with encrypted data that needs decryption.</string>
     <string name="home_fragments">There are 5 icons to click on:\n1 home = this page\n2 read NDEF message\n3 personalize = run all necessary steps to activate UID mirroring without user interaction\n4 activate the mirroring of data\n5 write the NDEF template to the tag\n\nNote: This app is working with tag types NTAG213, NTAG215 or NTAG216 only !</string>
     <string name="header_read">This app reads an NDEF message</string>
-    <string name="description_read">This example expects a class 4 type tag with an NDEF record (RTD_TEXT).\n\nWhen a tag is discovered the data from all records will be read.</string>
+    <string name="description_read">This example expects a NTAG424DNA tag.\n\nWhen a tag is discovered the data from all records will be read.</string>
     <string name="nfc_result">NFC read result</string>
     <string name="action_licenses">Used material and their licenses</string>
     <string name="header_ndef_settings">NDEF message settings</string>

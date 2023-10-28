@@ -1,8 +1,8 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.printData;
+import static de.androidcrypto.canteenapp.Constants.*;
+import static de.androidcrypto.canteenapp.Utils.doVibrate;
+import static de.androidcrypto.canteenapp.Utils.printData;
 
 import android.content.Intent;
 import android.nfc.NfcAdapter;

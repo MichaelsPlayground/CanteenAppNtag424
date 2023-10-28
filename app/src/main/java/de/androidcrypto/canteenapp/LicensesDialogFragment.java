@@ -1,4 +1,4 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
 import android.app.AlertDialog;
 import android.app.Dialog;

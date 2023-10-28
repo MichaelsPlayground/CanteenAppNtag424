@@ -1,10 +1,9 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
 import static android.content.Context.MODE_PRIVATE;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.hexStringToByteArray;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.printData;
+import static de.androidcrypto.canteenapp.Constants.*;
+
+import static de.androidcrypto.canteenapp.Utils.printData;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -297,7 +296,7 @@ public class ActivateFragment extends Fragment implements NfcAdapter.ReaderCallb
                 e.printStackTrace();
             }
         }
-        doVibrate(getActivity());
+        //doVibrate(getActivity());
     }
 
     /**

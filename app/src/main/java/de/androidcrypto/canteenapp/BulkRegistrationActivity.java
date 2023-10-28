@@ -1,7 +1,7 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.bytesToHexNpe;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.printData;
+import static de.androidcrypto.canteenapp.Utils.bytesToHexNpe;
+import static de.androidcrypto.canteenapp.Utils.printData;
 
 import android.app.Activity;
 import android.content.Context;
@@ -36,7 +36,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class BulkRegistrationActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {

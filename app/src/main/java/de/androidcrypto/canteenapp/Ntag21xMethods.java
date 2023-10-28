@@ -1,7 +1,7 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.printData;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.testBit;
+import static de.androidcrypto.canteenapp.Utils.printData;
+import static de.androidcrypto.canteenapp.Utils.testBit;
 
 import android.app.Activity;
 import android.nfc.FormatException;

@@ -1,9 +1,9 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
 import static android.content.Context.MODE_PRIVATE;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.bytesToHexNpe;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
+import static de.androidcrypto.canteenapp.Constants.*;
+import static de.androidcrypto.canteenapp.Utils.bytesToHexNpe;
+import static de.androidcrypto.canteenapp.Utils.doVibrate;
 
 import android.content.Intent;
 import android.content.SharedPreferences;

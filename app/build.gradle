@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'de.androidcrypto.nfcstoragemanagementtagpersonalization'
+    namespace 'de.androidcrypto.canteenapp'
     compileSdk 33
 
     defaultConfig {
-        applicationId "de.androidcrypto.nfcstoragemanagementtagpersonalization"
+        applicationId "de.androidcrypto.canteenapp"
         minSdk 26
         targetSdk 33
         versionCode 1

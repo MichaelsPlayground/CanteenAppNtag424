@@ -1,6 +1,20 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
 public class Constants {
+
+    /**
+     * section for key management
+     * A NTAG424DNA tag can have up to 5 different keys for the one available application
+     */
+
+    public final static byte[] defaultApplicationKey = Utils.hexStringToByteArray("00000000000000000000000000000000");
+    public final static byte[] applicationKey0 = Utils.hexStringToByteArray("a0000000000000000000000000000000");
+    public final static byte[] applicationKey1 = Utils.hexStringToByteArray("a1111111111111111111111111111111");
+    public final static byte[] applicationKey2 = Utils.hexStringToByteArray("a2222222222222222222222222222222");
+    public final static byte[] applicationKey3 = Utils.hexStringToByteArray("a3333333333333333333333333333333");
+    public final static byte[] applicationKey4 = Utils.hexStringToByteArray("a44444444444444444444444444444444");
+    public final int applicationKeyVersion = 1;
+
 
     public static final String UID_HEADER = "?";
     public static String UID_NAME = ""; // written by NdefSettingsFragment and read from preferences

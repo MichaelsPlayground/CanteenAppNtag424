@@ -1,9 +1,9 @@
-package de.androidcrypto.nfcstoragemanagementtagpersonalization;
+package de.androidcrypto.canteenapp;
 
 import static android.content.Context.MODE_PRIVATE;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Constants.*;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.doVibrate;
-import static de.androidcrypto.nfcstoragemanagementtagpersonalization.Utils.testBit;
+import static de.androidcrypto.canteenapp.Constants.*;
+
+import static de.androidcrypto.canteenapp.Utils.testBit;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -286,7 +286,7 @@ public class ActivateFragmentBeforeDeletionOfMethods extends Fragment implements
             e.printStackTrace();
         }
     }
-        doVibrate(getActivity());
+        //doVibrate(getActivity());
     }
 
     private String getPreferencesMatchString(String preferenceName, String preferenceHeader, String preferenceFooter) {
