@@ -162,6 +162,54 @@ public class ChargeFragment extends Fragment implements NfcAdapter.ReaderCallbac
                 Log.d(LOGTAG, "good type: " + Utils.byteToHex(tr2Record.getGoodType()));
                 Log.d(LOGTAG, "reserved: " + Utils.bytesToHexNpe(tr2Record.getReserved()));
 
+                // test the Virtual Value File
+                byte fileNumber = (byte) 0x01;
+                VirtualValueFile vvf = new VirtualValueFile(fileNumber, Constants.applicationKey0);
+                Log.d(LOGTAG, "vvf created for fileNumber " + Utils.byteToHex(fileNumber) +
+                        " key: " + printData("appKey0", Constants.applicationKey0));
+                Log.d(LOGTAG, "vvf is valid: " + vvf.isVirtualValueFileValid());
+                Log.d(LOGTAG, printData("vvf Salt", vvf.getSalt()));
+                Log.d(LOGTAG, printData("vvf Checksum", vvf.getChecksum()));
+                Log.d(LOGTAG, printData("vvf Balance", vvf.getBalance_ByteArray()));
+
+                boolean success = vvf.credit(Constants.applicationKey0, 23);
+                Log.d(LOGTAG, "vvf credit scuccess: " + success);
+                Log.d(LOGTAG, "vvf is valid: " + vvf.isVirtualValueFileValid());
+                Log.d(LOGTAG, printData("vvf Checksum", vvf.getChecksum()));
+                Log.d(LOGTAG, "vvf balance: " + vvf.getBalance());
+                Log.d(LOGTAG, printData("vvf Balance", vvf.getBalance_ByteArray()));
+
+                success = vvf.debit(35);
+                Log.d(LOGTAG, "vvf credit success: " + success);
+                Log.d(LOGTAG, "vvf is valid: " + vvf.isVirtualValueFileValid());
+                Log.d(LOGTAG, printData("vvf Checksum", vvf.getChecksum()));
+                Log.d(LOGTAG, "vvf balance: " + vvf.getBalance());
+                Log.d(LOGTAG, printData("vvf Balance", vvf.getBalance_ByteArray()));
+
+                success = vvf.debit(11);
+                Log.d(LOGTAG, "vvf debit success: " + success);
+                Log.d(LOGTAG, "vvf is valid: " + vvf.isVirtualValueFileValid());
+                Log.d(LOGTAG, printData("vvf Checksum", vvf.getChecksum()));
+                Log.d(LOGTAG, "vvf balance: " + vvf.getBalance());
+                Log.d(LOGTAG, printData("vvf Balance", vvf.getBalance_ByteArray()));
+
+                byte[] exportedVvf = vvf.exportVvf();
+                Log.d(LOGTAG, printData("exportedVvf", exportedVvf));
+
+                // reconstruct the VVF
+                VirtualValueFile vvf2 = new VirtualValueFile(exportedVvf);
+                Log.d(LOGTAG, "vvf2 is valid: " + vvf2.isVirtualValueFileValid());
+                Log.d(LOGTAG, "vvf2 balance: " + vvf2.getBalance());
+
+                success = vvf2.credit(Constants.applicationKey1, 7);
+                Log.d(LOGTAG, "vvf2 credit success: " + success);
+                success = vvf2.credit(Constants.applicationKey0, 7);
+                Log.d(LOGTAG, "vvf2 credit success: " + success);
+                Log.d(LOGTAG, "vvf2 is valid: " + vvf2.isVirtualValueFileValid());
+                Log.d(LOGTAG, "vvf2 balance: " + vvf2.getBalance());
+
+                exportedVvf = vvf2.exportVvf();
+                Log.d(LOGTAG, printData("exportedVvf2", exportedVvf));
 
             }
         });

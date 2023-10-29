@@ -13,7 +13,7 @@ This is the main workplace for the cashier that is selling goods. The cashier ca
 The app is using a very simple goods and and machine logging system (use 256 different product groups and
 cash register numbers).
 
-As the deposit is hosted in a **Value file** there is no real amount but only "units" available. This 
+As the deposit is hosted in a **Virtual Value file** there is no real amount but only "units" available. This 
 app is not using a "currency" field. For example, 100 "units" are 100 cent meaning 1 USD or 1 Euro. 
 The **maximum debit value is 99999 units** (e.g. 999,99 USD / Euro), the **minimum debit value is 1 unit**. 
 When (re-) charging the card there is a **maximum deposit amount of 9999999 units** (e.g. 99999,99 USD /Euro).
@@ -28,17 +28,30 @@ to separate this functionality from the cashier position.
 This fragment prepares the tag for the usage as canteen card:
 
 1) setting of indiviual application keys
-- read data (value file, cyclic record file a standard file)
-- write data (value file, cyclic record file a standard file)
-- read and write data (value file, cyclic record file a standard file)
+- read data (cyclic record file a standard file)
+- write data (virtual value file, cyclic record file a standard file)
+- read and write data ( virtual value file, cyclic record file a standard file)
 2) formats the 3 **Standard files** on the tag for usage:
 - file number 00 (size: 32 bytes): usage a NDEF compatibility container
 - file number 01 (size: 256 bytes): usage as card holders data, settings and extended log file
 - file number 02 (size: 128 bytes): usage as NDEF placeholder for value and last transaction record and a digital signature
 3) empties the cyclic record file for the confirmed transaction log
 4) The file numbers 00 and 02 are in plain communication mode, all other files will operate in full enciphered communication.
+5) setup the **Virtual Value File** for usage.
 
 Please note that the tag requires a NTAG424DNA tag with fabric settings, especially regarding the application keys.
+
+# Virtual Value File
+
+The NTAG424DNA is a tag with a predefined memory usage - it has 3 standard files of different sizes. Unfortunately 
+there is no value file available for this NFC tag type (e.g. on a DESFire Light or EVx tag you can setup the tag for such a file 
+in an application).
+
+For this reason I'm using a **Virtual Value File** that can be placed in one of the standard files and acts like a 
+"real" one - you can credit or debit the value and get the balance. All **writing access** is secured by a key using 
+a key derivation (PBKDF2, 10000 iterations, 16 bytes resulting key length, algorithm PBKDF2WithHmacSHA1). 
+All data is secured by a 12 bytes long checksum based on a SHA-256 hash calculation but shortened to have a complete
+(exported) file size of 48 bytes.
 
 # data security
 
