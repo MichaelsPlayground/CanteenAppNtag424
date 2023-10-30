@@ -64,7 +64,7 @@ public class VirtualValueFile {
             balance = 0;
             balance_ByteArray = intToByteArray(balance);
             byte[] chkSum = calculateChecksum();
-            Log.d(TAG, Utils.printData("chkSum", chkSum));
+            //Log.d(TAG, Utils.printData("chkSum", chkSum));
             if (chkSum == null) {
                 Log.e(TAG, "checksum is invalid, aborted");
                 checksum = null;
@@ -170,7 +170,7 @@ public class VirtualValueFile {
         balance = balance + creditAmount;
         balance_ByteArray = intToByteArray(balance);
         byte[] chkSum = calculateChecksum();
-        Log.d(TAG, Utils.printData("chkSum", chkSum));
+        //Log.d(TAG, Utils.printData("chkSum", chkSum));
         if (chkSum == null) {
             Log.e(TAG, "checksum is invalid, aborted");
             checksum = null;
@@ -214,7 +214,7 @@ public class VirtualValueFile {
         balance = balance - debitAmount;
         balance_ByteArray = intToByteArray(balance);
         byte[] chkSum = calculateChecksum();
-        Log.d(TAG, Utils.printData("chkSum", chkSum));
+        //Log.d(TAG, Utils.printData("chkSum", chkSum));
         if (chkSum == null) {
             Log.e(TAG, "checksum is invalid, aborted");
             checksum = null;

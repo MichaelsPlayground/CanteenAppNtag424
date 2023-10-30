@@ -51,6 +51,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -211,6 +214,112 @@ public class ChargeFragment extends Fragment implements NfcAdapter.ReaderCallbac
                 exportedVvf = vvf2.exportVvf();
                 Log.d(LOGTAG, printData("exportedVvf2", exportedVvf));
 
+                // test the Virtual Cyclic Record File
+                byte fileNumberCrf = (byte) 0x02;
+                byte maximumOfRecords = 03;
+                VirtualCyclicRecordFile vcrf = new VirtualCyclicRecordFile(fileNumberCrf, maximumOfRecords, Constants.applicationKey0);
+                Log.d(LOGTAG, "vcrf created for fileNumber " + Utils.byteToHex(fileNumberCrf) +
+                        " maximumOfRecords: " + Utils.byteToHex(maximumOfRecords) +
+                        " key: " + printData("appKey0", Constants.applicationKey0));
+                Log.d(LOGTAG, "vcrf is valid: " + vcrf.isVirtualCyclicRecordFileValid());
+
+                // add a record
+                byte[] record = "123456789012345".getBytes(StandardCharsets.UTF_8);
+                success = vcrf.addRecord(Constants.applicationKey0, record);
+                Log.d(LOGTAG, "vcrf addRecord success: " + success);
+                Log.d(LOGTAG, "vcrf is valid: " + vcrf.isVirtualCyclicRecordFileValid());
+                Log.d(LOGTAG, printData("vcrf Checksum", vcrf.getChecksum()));
+                byte[][] records = vcrf.getRecords();
+                Log.d(LOGTAG, "numberOfRecords: " + vcrf.getNumberOfRecords());
+                Log.d(LOGTAG, "records has records: " + records.length);
+                Log.d(LOGTAG, "lastRecord: " + vcrf.getLastRecord());
+                for (int i = 0; i < maximumOfRecords; i++) {
+                    Log.d(LOGTAG, "i: " + i + printData(" record", records[i]));
+                }
+
+                record = "222222".getBytes(StandardCharsets.UTF_8);
+                success = vcrf.addRecord(Constants.applicationKey0, record);
+                Log.d(LOGTAG, "vcrf addRecord success: " + success);
+                Log.d(LOGTAG, "vcrf is valid: " + vcrf.isVirtualCyclicRecordFileValid());
+                Log.d(LOGTAG, printData("vcrf Checksum", vcrf.getChecksum()));
+                records = vcrf.getRecords();
+                Log.d(LOGTAG, "numberOfRecords: " + vcrf.getNumberOfRecords());
+                Log.d(LOGTAG, "records has records: " + records.length);
+                Log.d(LOGTAG, "lastRecord: " + vcrf.getLastRecord());
+                for (int i = 0; i < maximumOfRecords; i++) {
+                    Log.d(LOGTAG, "i: " + i + printData(" record", records[i]));
+                }
+
+                record = "333333".getBytes(StandardCharsets.UTF_8);
+                success = vcrf.addRecord(Constants.applicationKey0, record);
+                Log.d(LOGTAG, "vcrf addRecord success: " + success);
+                Log.d(LOGTAG, "vcrf is valid: " + vcrf.isVirtualCyclicRecordFileValid());
+                Log.d(LOGTAG, printData("vcrf Checksum", vcrf.getChecksum()));
+                records = vcrf.getRecords();
+                Log.d(LOGTAG, "numberOfRecords: " + vcrf.getNumberOfRecords());
+                Log.d(LOGTAG, "records has records: " + records.length);
+                Log.d(LOGTAG, "lastRecord: " + vcrf.getLastRecord());
+                for (int i = 0; i < maximumOfRecords; i++) {
+                    Log.d(LOGTAG, "i: " + i + printData(" record", records[i]));
+                }
+
+                record = "4444444444".getBytes(StandardCharsets.UTF_8);
+                success = vcrf.addRecord(Constants.applicationKey0, record);
+                Log.d(LOGTAG, "vcrf addRecord success: " + success);
+                Log.d(LOGTAG, "vcrf is valid: " + vcrf.isVirtualCyclicRecordFileValid());
+                Log.d(LOGTAG, printData("vcrf Checksum", vcrf.getChecksum()));
+                records = vcrf.getRecords();
+                Log.d(LOGTAG, "numberOfRecords: " + vcrf.getNumberOfRecords());
+                Log.d(LOGTAG, "records has records: " + records.length);
+                Log.d(LOGTAG, "lastRecord: " + vcrf.getLastRecord());
+                for (int i = 0; i < maximumOfRecords; i++) {
+                    Log.d(LOGTAG, "i: " + i + printData(" record", records[i]));
+                }
+
+                // export the vcrf
+                byte[] exportedVcrf = vcrf.exportVcrf();
+                Log.d(LOGTAG, printData("exportedVcrf", exportedVcrf));
+
+                // reconstruct the VCRF
+                VirtualCyclicRecordFile vcrf2 = new VirtualCyclicRecordFile(exportedVcrf);
+                Log.d(LOGTAG, "vcrf2 is valid: " + vcrf2.isVirtualCyclicRecordFileValid());
+                Log.d(LOGTAG, "vcrf2 records: " + vcrf2.getNumberOfRecords());
+                records = vcrf2.getRecords();
+                for (int i = 0; i < maximumOfRecords; i++) {
+                    Log.d(LOGTAG, "i: " + i + printData(" record", records[i]));
+                }
+
+                // reconstruct the VCRF with a wrong import dataset
+                byte[] exportedVcrfFalse = Arrays.copyOf(exportedVcrf, 111);
+                VirtualCyclicRecordFile vcrf3 = new VirtualCyclicRecordFile(exportedVcrfFalse);
+                Log.d(LOGTAG, "vcrf3 is valid: " + vcrf3.isVirtualCyclicRecordFileValid());
+                Log.d(LOGTAG, "vcrf3 records: " + vcrf3.getNumberOfRecords());
+                records = vcrf3.getRecords();
+                for (int i = 0; i < maximumOfRecords; i++) {
+                    Log.d(LOGTAG, "i: " + i + printData(" record", records[i]));
+                }
+
+                // show last record
+                byte[] lastRecord = vcrf2.showLastRecord();
+                Log.d(LOGTAG, "vcrf2 last record: " + vcrf2.getLastRecord());
+                Log.d(LOGTAG, printData("lastRecord data", lastRecord));
+
+                // get record list in order newest record first
+                List<byte[]> recordList = vcrf2.getRecordList();
+                Log.d(LOGTAG, "The exported recordList contains records: " + recordList.size());
+                for (int i = 0; i < recordList.size(); i++) {
+                    Log.d(LOGTAG, "i: " + i + printData(" record", recordList.get(i)));
+                }
+
+
+                // clear the record file
+                vcrf2.clearRecords(Constants.applicationKey0);
+                Log.d(LOGTAG, "vcrf2 is valid: " + vcrf2.isVirtualCyclicRecordFileValid());
+                Log.d(LOGTAG, "vcrf2 records: " + vcrf2.getNumberOfRecords());
+                records = vcrf2.getRecords();
+                for (int i = 0; i < maximumOfRecords; i++) {
+                    Log.d(LOGTAG, "i: " + i + printData(" record", records[i]));
+                }
             }
         });
     }
