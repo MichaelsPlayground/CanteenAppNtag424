@@ -8,13 +8,13 @@
 
     <item
         android:id="@+id/personalize_tag"
-        android:icon="@drawable/outline_settings_remote_24"
+        android:icon="@drawable/outline_done_all_24"
         android:title="personalize" />
 
     <item
         android:id="@+id/charge"
         android:icon="@drawable/outline_add_circle_outline_24"
-        android:title="charge" />
+        android:title="Charge" />
 
     <item
         android:id="@+id/activate"

@@ -13,8 +13,14 @@
     <string name="header_activate">Activate the mirroring of data to NDEF message</string>
     <string name="description_activate">Activates the mirroring of data (UID, read counter and MAC) in an NDEF message on tapping</string>
     <string name="description_activate_rg">choose your action</string>
-    <string name="header_personalize_tag">Run all steps to personalize a tag for NDEF mirroring</string>
-    <string name="description_personalize_tag">This are the steps that will run when a tag is tapped\n\n1. write the NDEF template to the tag\n2. disable all existing mirror\n3. enable UID mirroring\n4. write the UID-based MAC to the tag\n5. Bocking the tag from write access with a password</string>
+    <string name="header_personalize_tag">Personalize a tag for Canteen application</string>
+    <string name="description_personalize_tag">This are the steps that will run when a tag is tapped\n\n
+        1. write the NDEF compatibility container to file 00\n
+        2. write the NDEF template to file 02\n
+        3. write the card holders name and ID to file 01\n
+        4. write the Virtual Value file to file 01\n
+        5. write the Virtual Cyclic Records File to file 01\n
+        6. set application keys</string>
     <string name="warning_personalize_tag">The app will IMMEDIATELY write to an attached tag without any further confirmation !</string>
     <string name="header_backup">Backup and Restore settings</string>
     <string name="description_backup">Write the settings to a binary file or restores the settings from a binary file (located in external storage like Downloads folder).\nRestoring will overwrite existing settings without further confirmation.</string>
