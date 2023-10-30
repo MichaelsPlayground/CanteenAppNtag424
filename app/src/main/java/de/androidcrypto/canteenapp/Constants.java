@@ -12,7 +12,12 @@ public class Constants {
     public final static byte[] applicationKey1 = Utils.hexStringToByteArray("a1111111111111111111111111111111");
     public final static byte[] applicationKey2 = Utils.hexStringToByteArray("a2222222222222222222222222222222");
     public final static byte[] applicationKey3 = Utils.hexStringToByteArray("a3333333333333333333333333333333");
-    public final static byte[] applicationKey4 = Utils.hexStringToByteArray("a44444444444444444444444444444444");
+    public final static byte[] applicationKey4 = Utils.hexStringToByteArray("a4444444444444444444444444444444");
+    public final static byte applicationKeyNumber0 = (byte) 0x00;
+    public final static byte applicationKeyNumber1 = (byte) 0x01;
+    public final static byte applicationKeyNumber2 = (byte) 0x02;
+    public final static byte applicationKeyNumber3 = (byte) 0x03;
+    public final static byte applicationKeyNumber4 = (byte) 0x04;
     public final int applicationKeyVersion = 1;
 
 

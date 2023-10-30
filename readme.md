@@ -89,7 +89,7 @@ As the free user memory on a NTAG424DNA tag is limited this is the usage of the 
 
 Datasheet for NTAG424DNA:
 
-Application note 12xxxx Features and Hints: 
+Application note 12xxxx Features and Hints: https://www.nxp.com/docs/en/application-note/AN12196.pdf
 
 
 Icons: https://www.freeiconspng.com/images/nfc-icon
