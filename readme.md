@@ -53,6 +53,21 @@ a key derivation (PBKDF2, 10000 iterations, 16 bytes resulting key length, algor
 All data is secured by a 12 bytes long checksum based on a SHA-256 hash calculation but shortened to have a complete
 (exported) file size of 48 bytes.
 
+# Virtual Cyclic Records File
+
+As the NTAG424DNA tag does not provide a Cyclic Records File I'm using a **Virtual Cyclic Records File** that can be placed 
+in a Standard File and acts like a real Cyclic Records File. On file creation you set a key and maximum number of records.  
+
+Each record has a fixed size of 16 bytes and a maximum number of records of 10 entries.
+
+You can add a record, show the last record, get a list with all records (sorted by storage time) and clear the complete file.
+
+All **writing access** is secured by a key using a key derivation (PBKDF2, 10000 iterations, 16 bytes resulting key length, 
+algorithm PBKDF2WithHmacSHA1).
+
+All data is secured by a 12 bytes long checksum based on a SHA-256 hash calculation but shortened to a multiple of 16 bytes export 
+size.
+
 # data security
 
 This app is a sample application showing the functionality **but not optimized for security**. For example the 

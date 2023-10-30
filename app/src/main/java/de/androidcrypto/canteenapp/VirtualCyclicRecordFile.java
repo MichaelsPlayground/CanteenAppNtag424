@@ -21,9 +21,15 @@ import javax.crypto.spec.PBEKeySpec;
  * The class provides access to a Virtual Cyclic Record File that acts like a real Cyclic Record File
  * (e.g. available on DESFire Light or DESFire EVx tags).
  * <p>
- * You can add new records, read one or all records or clear the complete record file.
- * All writing access is secured by a key using a key derivation (PBKDF2, 10000 iterations, 16 bytes
- * long resulting key length).
+ * Each record has a fixed size of 16 bytes and a maximum number of records of 10 entries.
+ * You can add a record, show the last record, get a list with all records (sorted by storage time) and clear the complete file.
+ *
+ * All writing access is secured by a key using a key derivation (PBKDF2, 10000 iterations, 16 bytes resulting key length,
+ * algorithm PBKDF2WithHmacSHA1).
+ *
+ * All data is secured by a 12 bytes long checksum based on a SHA-256 hash calculation but shortened to a multiple of 16 bytes export
+ * size.
+ *
  * All data is secured by a 12 bytes long checksum based on a SHA-256 hash calculation.
  * If you are using the maximum of 10 records and a RECORD_SIZE of 16 bytes the complete file takes
  * 208 bytes of size, if you are using the minimum of 1 record the size is 64 bytes.
