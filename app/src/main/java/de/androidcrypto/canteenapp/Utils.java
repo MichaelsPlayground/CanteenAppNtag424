@@ -349,6 +349,19 @@ public class Utils {
             return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
         }
     }
+
+    // gives an 7 byte long timestamp ddMMyyyyHHmmss for TransactionRecord purposes
+    public static String getTimestampShort() {
+        // gives a 7 character long string
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return ZonedDateTime
+                    .now(ZoneId.systemDefault())
+                    .format(DateTimeFormatter.ofPattern("ddMMuuuuHHmmss"));
+        } else {
+            return new SimpleDateFormat("ddMMyyyyHHmmss").format(new Date());
+        }
+    }
+
     public static byte[] generateTestData(int length) {
         /**
          * this method will generate a byte array of size 'length' and will hold a byte sequence

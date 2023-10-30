@@ -31,7 +31,7 @@ public class VirtualValueFile {
     private byte fileNumber;
     private byte[] salt;
     private final int NUMBER_OF_PBKDF2_ITERATIONS = 10000;
-    private final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA1";
+    private final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256";
     private final String SHA_HASH_ALGORITHM = "SHA-256";
     private final int SALT_LENGTH = 16;
     private final int GENERATED_KEY_LENGTH = 16;

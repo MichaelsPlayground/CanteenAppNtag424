@@ -2,6 +2,7 @@ package de.androidcrypto.canteenapp;
 
 import static de.androidcrypto.canteenapp.Constants.*;
 import static de.androidcrypto.canteenapp.Utils.doVibrate;
+import static de.androidcrypto.canteenapp.Utils.playSinglePing;
 import static de.androidcrypto.canteenapp.Utils.printData;
 
 import android.content.Intent;
@@ -118,6 +119,8 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         4. xxwrite the UID-based MAC to the tag
          */
 
+        doVibrate(getActivity());
+
         // step 1 select the application
         boolean success;
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -205,7 +208,6 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
-
         // the cardId is maximum 16 bytes long and written to file 01 @offset 16
         byte[] cardIdFull = new byte[16];
         int offsetCardId = 16;
@@ -246,7 +248,6 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in saving the Cyclic Records File, aborted");
             return false;
         }
-
 
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: read the file settings of file 02");
@@ -300,144 +301,85 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 02, aborted");
             return false;
         }
-/*
-        // step 1 b: check that the tag is writable
-        if (!ndef.isWritable()) {
-            writeToUiAppend(resultNfcWriting,"NFC tag is not writable, aborted");
-            return false;
-        }
-        Log.d(TAG, "tag is writable");
 
-        // step 1 c: build the template string
-        String templateUrlString = preferencesHandling.getPreferencesString(PREFS_TEMPLATE_URL_NAME);
-        Log.d(TAG, "templateUrlString: " + templateUrlString);
-        if (TextUtils.isEmpty(templateUrlString)) {
-            writeToUiAppend(resultNfcWriting, "could not get the templateUrlString, aborted");
-            writeToUiAppend(resultNfcWriting, "Did you forget to save the NDEF settings ?");
-            return false;
-        }
-
-        // step 1 d: write the templateUrlString to the tag
-        success = ntagMethods.writeNdefMessageUrl(ndef, templateUrlString);
-        if (!success) {
-            writeToUiAppend(resultNfcWriting, "could not write the templateUrlString with NDEF, aborted");
-            return false;
-        }
-        Log.d(TAG, "templateUrlString written to the tag");
-
-        // step 2: connect to NcfA and disable all mirrors
-        // step 2 a: connect to NcfA
-        success = ntagMethods.connectNfca(nfcA, ndef);
-        if (!success) {
-            writeToUiAppend(resultNfcWriting, "could not connect with NcfA, aborted");
-            return false;
-        }
-        Log.d(TAG, "connected to the  tag using NfcA technology");
-
-        // step 2 b: get the UID of the tag
-        byte[] tagUid = ntagMethods.getTagUid(discoveredTag);
-        if (tagUid == null) {
-            writeToUiAppend(resultNfcWriting,"could not retrieve the UID of the tag, aborted");
-            return false;
-        }
-        Log.d(TAG, printData("tagUid", tagUid));
-        writeToUiAppend(resultNfcWriting, Utils.printData("UID", tagUid));
-
-        // step 2 c: identify the tag
-        String ntagVersion = NfcIdentifyNtag.checkNtagType(nfcA, tagUid);
-        if ((!ntagVersion.equals("213")) && (!ntagVersion.equals("215")) && (!ntagVersion.equals("216"))) {
-            writeToUiAppend(resultNfcWriting,"NFC tag is NOT of type NXP NTAG213/215/216, aborted");
-            return false;
-        }
-        Log.d(TAG, "tag is of type NTAG213/215/216");
-
-        // step 2 d: get technical data of NTAG
-        int nfcaMaxTransceiveLength = ntagMethods.getTransceiveLength(nfcA);
-        if (nfcaMaxTransceiveLength < 1) {
-            writeToUiAppend(resultNfcWriting,"maximum transceive length is insufficient, aborted");
-            return false;
-        }
-        int ntagPages = NfcIdentifyNtag.getIdentifiedNtagPages();
-        identifiedNtagConfigurationPage = NfcIdentifyNtag.getIdentifiedNtagConfigurationPage();
-        Log.d(TAG, "The configuration is starting in page " + identifiedNtagConfigurationPage);
-        writeToUiAppend(resultNfcWriting, "The configuration is starting in page " + identifiedNtagConfigurationPage);
-        identifiedNtagCapabilityContainerPage = NfcIdentifyNtag.getIdentifiedNtagCapabilityContainerPage();
-        identifiedNtagPasswordPage = NfcIdentifyNtag.getIdentifiedNtagPasswordPage();
-        identifiedNtagPackPage = NfcIdentifyNtag.getIdentifiedNtagPackPage();
-
-        // step 2 d: disabling all counters
-        success = ntagMethods.disableAllMirror(nfcA, identifiedNtagConfigurationPage);
-        if (!success) {
-            writeToUiAppend(resultNfcWriting, "could not disable all mirrors, aborted");
-            return false;
-        }
-        Log.d(TAG, "All mirroring was disabled");
-
-        // step 3 enable UID mirroring
-        // step 3 a:
-        int maximumBytesToRead = NDEF_TEMPLATE_STRING_MAXIMUM_LENGTH + 7; // + 7 NDEF header bytes, so it total 144 bytes
-        byte[] ntagMemory = ntagMethods.readNdefContent(nfcA, maximumBytesToRead, nfcaMaxTransceiveLength);
-        if ((ntagMemory == null) || (ntagMemory.length < 10)) {
-            writeToUiAppend(resultNfcWriting, "Error - could not read enough data from tag, aborted");
-            return false;
-        }
-        Log.d(TAG, printData("ntagMemory", ntagMemory));
-        String ntagDataString = new String(ntagMemory, StandardCharsets.UTF_8);
-        writeToUiAppend(resultNfcWriting, "ntagDataString:\n" + ntagDataString);
-
-        // step 3 b: read the placeholder names from the shared preferences
-        String uidMatchString = preferencesHandling.getPreferencesMatchString(PREFS_UID_NAME, UID_HEADER, UID_FOOTER);
-        String macMatchString = preferencesHandling.getPreferencesMatchString(PREFS_MAC_NAME, MAC_HEADER, MAC_FOOTER);
-        Log.d(TAG, "uidMatchString: " + uidMatchString);
-        Log.d(TAG, "macMatchString: " + macMatchString);
-        // search for match strings and add length of match string for the next position to write the data
-        int positionUidMatch = preferencesHandling.getPlaceholderPosition(ntagDataString, uidMatchString);
-        int positionMacMatch = preferencesHandling.getPlaceholderPosition(ntagDataString, macMatchString);
-        Log.d(TAG, "positionUidMatch: " + positionUidMatch + " positionMacMatch: " + positionMacMatch);
-        // both values need to be > 1
-        writeToUiAppend(resultNfcWriting, "positionUidMatch: " + positionUidMatch + " || positionMacMatch: " + positionMacMatch);
-        if ((positionUidMatch < 1) || (positionMacMatch < 1)) {
-            writeToUiAppend(resultNfcWriting, "Error - insufficient matching positions found, aborted");;
-            return false;
+        // write to file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write content to file 03");
+        byte[] content03 = "Some content for file 03".getBytes(StandardCharsets.UTF_8);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, content03, 0, content03.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "write content to file 03 was SUCCESSFUL");
         } else {
-            writeToUiAppend(resultNfcWriting, "positive matching positions, now enable mirroring");
-        }
-        Log.d(TAG, "positive matching positions, now enable mirroring");
-
-        // step 3 c: enable UID counter
-        success = ntagMethods.enableUidMirror(nfcA, identifiedNtagConfigurationPage, positionUidMatch);
-        if (!success) {
-            writeToUiAppend(resultNfcWriting, "could not enable UID mirror, aborted");
+            writeToUiAppend(resultNfcWriting, "FAILURE in writing content to file 03, aborted");
             return false;
         }
-        Log.d(TAG, "UID mirror was enabled on position: " + positionUidMatch);
 
-        // step 3 d: calculate the MAC from uid using SHA-256 and shortened to 8 bytes length
-        byte[] shortenedHash = ntagMethods.getUidHashShort(tagUid);
-        Log.d(TAG, printData("shortenedHash", shortenedHash));
-        writeToUiAppend(resultNfcWriting, printData("shortenedHash", shortenedHash));
-
-        // step 3 e: write mac to tag
-        success = ntagMethods.writeMacToNdef(nfcA, identifiedNtagConfigurationPage, shortenedHash, positionMacMatch);
-        if (!success) {
-            writeToUiAppend(resultNfcWriting, "could not write MAC, aborted");
+        // read content from file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: read content of file 03");
+        byte[] content03Read = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, 0, 128);
+        if (content03Read != null) {
+            writeToUiAppend(resultNfcWriting, printData("content file 03\n", content03Read));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 03, aborted");
             return false;
         }
-        Log.d(TAG, "MAC was written with success on position: " + positionMacMatch);
 
-        // todo enable write access by password/pack beginning at Compatibility container page
-
-        success = ntagMethods.enableWriteProtection(nfcA, TAG_PASSWORD, TAG_PACK, identifiedNtagCapabilityContainerPage, identifiedNtagPasswordPage, identifiedNtagPackPage);
-        if (!success) {
-            writeToUiAppend(resultNfcWriting, "could not enable write protection, aborted");
+        // step  authenticate with key 01 (read & write key)
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
             return false;
         }
-        Log.d(TAG, "write protection was enabled, beginning with page " + identifiedNtagCapabilityContainerPage);
+
+        // run a credit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a credit transaction");
+        vvf = new VirtualValueFile(contentValue);
+        vcrf = new VirtualCyclicRecordFile(contentCyclic);
+        // run a credit/charge transaction
+        //TransactionRecord(String timestampShort, String amPmMarker, String creditDebitMarker, String bookingUnits, byte machineNumber, byte goodType) {
+        String timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        String amPmMarker = "P";
+        String creditDebitMarker = "C";
+        String bookingUnits = "010000";
+        byte machineNumber = (byte) 0x01;
+        byte goodType = (byte) 0x00;
+        TransactionRecord tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vvf.credit(applicationKey4, Integer.parseInt(bookingUnits));
+        vcrf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVvf = vvf.exportVvf();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Value File, aborted");
+            return false;
+        }
+        exportedVcrf = vcrf.exportVcrf();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Cyclic Records File, aborted");
+            return false;
+        }
 
 
- */
+
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");
         Log.d(TAG, "The tag was personalized with SUCCESS");
+        playSinglePing(getContext());
         return true;
     }
 
