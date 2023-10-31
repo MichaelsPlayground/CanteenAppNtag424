@@ -6,6 +6,8 @@ import static de.androidcrypto.canteenapp.Utils.playSinglePing;
 import static de.androidcrypto.canteenapp.Utils.printData;
 
 import android.content.Intent;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
@@ -207,7 +209,6 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
-
         // step 1 write the changed NDEF compatibility container to the file 01
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: write a modified NDEF compatibility container to file 01");
@@ -309,8 +310,6 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         writeToUiAppend(resultNfcWriting, fs02.dump());
         FileSettings fs03 = allFileSettings[2];
         writeToUiAppend(resultNfcWriting, fs03.dump());
-
-
 
         // step  authenticate with key 01 (read & write key)
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -549,7 +548,35 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
+        // create a NDEF message
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: create a NDEF message");
+        NdefRecord ndefRecord = NdefRecord.createTextRecord("en","English String Balance: 97,40");
+        NdefMessage ndefMessage = new NdefMessage(ndefRecord);
+        byte[] ndefMessageByte = ndefMessage.toByteArray();
+        writeToUiAppend(resultNfcWriting, printData("ndefMessage", ndefMessageByte));
 
+        // step  authenticate with key 01 (read & write key)
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            return false;
+        }
+
+        // write NDEF message to file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write NDEF message to file 03");
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, ndefMessageByte, 0, ndefMessageByte.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "write NDEF message to file 01 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 01, aborted");
+            return false;
+        }
 
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");
         Log.d(TAG, "The tag was personalized with SUCCESS");
