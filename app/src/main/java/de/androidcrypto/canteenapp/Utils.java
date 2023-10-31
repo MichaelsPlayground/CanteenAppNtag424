@@ -321,6 +321,10 @@ public class Utils {
         return list;
     }
 
+    public static String convertIntegerInFloatString(int data) {
+        return String.format("%5.2f", data / 100.0);
+    }
+
 
     /**
      * splits a byte array in chunks

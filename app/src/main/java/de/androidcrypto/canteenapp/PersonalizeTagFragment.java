@@ -45,7 +45,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
     private String mParam2;
 
     private static final String TAG = PersonalizeTagFragment.class.getName();
-    private com.google.android.material.textfield.TextInputEditText cardholderName, cardId;
+    private com.google.android.material.textfield.TextInputEditText cardholderName, cardId, remainingDeposit;
     private com.google.android.material.textfield.TextInputEditText resultNfcWriting;
 
     /**
@@ -118,6 +118,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         transactionModelArrayList = new ArrayList<>();
         transactionRVAdapter = new TransactionRVAdapter(transactionModelArrayList, getContext());
         transactionRV = getView().findViewById(R.id.idRvTransactions);
+        remainingDeposit = getView().findViewById(R.id.etPersonalizeRemainingDeposit);
 
         // setting layout manager for our recycler view.
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
@@ -193,10 +194,32 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             // todo return false;
         }
 
-
-        // step 1 write the NDEF compatibility container to the file 00
-
         // step 2 write the NDEF template to the file 02
+
+        // step  authenticate with key 00 (read & write key)
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 0");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber0, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 0 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 0, aborted");
+            return false;
+        }
+
+
+        // step 1 write the changed NDEF compatibility container to the file 01
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write a modified NDEF compatibility container to file 01");
+        byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("0017200080007f0406e105008000000000000000000000000000000000000000");
+        // This CC has one file only with file ID E105
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, modifiedNdefCompatibilityContainer, 0, 32);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            // todo return false;
+        }
 
         // step  authenticate with key 01 (read & write key)
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -209,9 +232,10 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
-        // step 3 write the personal data (cardholder name and cardId) to file 01
+
+        // step 3 write the personal data (cardholder name and cardId) to file 02
         writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 03: write the personal data (cardholder name and cardId) to the file 01");
+        writeToUiAppend(resultNfcWriting, "step 03: write the personal data (cardholder name and cardId) to the file 02");
         String cardholderNameString = cardholderName.getText().toString();
         if (TextUtils.isEmpty(cardholderNameString)) {
             writeToUiAppend(resultNfcWriting, "please enter a cardholder's name");
@@ -410,8 +434,43 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         amPmMarker = "A";
         creditDebitMarker = "D";
         bookingUnits = "000340";
-        machineNumber = (byte) 0x11;
+        machineNumber = (byte) 0x09;
         goodType = (byte) 0x01;
+        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vvf.debit(Integer.parseInt(bookingUnits));
+        vcrf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVvf = vvf.exportVvf();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Value File, aborted");
+            return false;
+        }
+        exportedVcrf = vcrf.exportVcrf();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Cyclic Records File, aborted");
+            return false;
+        }
+
+        // run a second debit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
+        timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        amPmMarker = "A";
+        creditDebitMarker = "D";
+        bookingUnits = "000250";
+        machineNumber = (byte) 0x11;
+        goodType = (byte) 0x15;
         tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
@@ -455,35 +514,41 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         for (int i = 0; i < transactionRecordList.size(); i++) {
             TransactionRecord trSingle = transactionRecordList.get(i);
             LookupTable lt = new LookupTable(trSingle);
-            /*TransactionModel trModel = new TransactionModel(
-                    Utils.convertTimestampShortToLong(trSingle.getTimestampShort()),
-                    // todo lookups for data
-                    trSingle.getBookingUnits(),
-                    trSingle.getCreditDebitMarker(),
-                    Utils.byteToHex(trSingle.getMachineNumber()),
-                    Utils.byteToHex(trSingle.getGoodType())
-                    );*/
             TransactionModel trModel = new TransactionModel(
                     lt.getTransactionTimestamp(),
                     // todo lookups for data
                     lt.formatBookingUnits(),
-                    trSingle.getCreditDebitMarker(),
-                    Utils.byteToHex(trSingle.getMachineNumber()),
-                    Utils.byteToHex(trSingle.getGoodType())
+                    lt.formatCreditDebitMarker(),
+                    lt.formatMachineNumber(),
+                    lt.formatGoodType()
             );
             transactionModelArrayList.add(trModel);
         }
 
         transactionRVAdapter = new TransactionRVAdapter(transactionModelArrayList, getContext());
+        final int balance = vvf.getBalance();
         getActivity().runOnUiThread(() -> {
             // setting layout manager for our recycler view.
             LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
             transactionRV.setLayoutManager(linearLayoutManager);
             // setting our adapter to recycler view.
             transactionRV.setAdapter(transactionRVAdapter);
+            remainingDeposit.setText(Utils.convertIntegerInFloatString(balance));
         });
 
         writeToUiAppend(resultNfcWriting, "Number of recorded transactions: " + transactionModelArrayList.size());
+
+        // read content from file 01
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: read content of file 01");
+        byte[] content01Read = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, 0, 32);
+        if (content01Read != null) {
+            writeToUiAppend(resultNfcWriting, printData("content file 01\n", content01Read));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 01, aborted");
+            return false;
+        }
+
 
 
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");

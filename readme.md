@@ -77,6 +77,49 @@ As the free user memory on a NTAG424DNA tag is limited this is the usage of the 
 
 ## file number 00 (size: 32 bytes): usage a NDEF compatibility container
 
+```plaintext
+original content (compatibility container):
+001720010000ff0406e104010000000506e10500808283000000000000000000
+
+0017 cclen = 23 bytes
+    20 mapping version 2.0
+      0100 MLe 256 bytes
+          00ff MLc 255 bytes
+              NDEF-File Ctrl TLV
+              04 indicates the NDEF-File_Ctrl_TLV
+                06 6 bytes
+                  e104 NDEF File Identifier = E104h 
+                      0100 NDEF-File Size = 0100h 256 bytes
+                          00 NDEF-File READ Access Condition = 00h, i.e. READ access granted without any security
+                            00 NDEF-File WRITE Access Condition = 00h, i.e. WRITE access granted without any security
+                              Proprietary-File_Ctrl_TLV
+                              05 indicates the Proprietary-File_Ctrl_TLV
+                                06 6 bytes
+                                  e105 Proprietary-File File Identifier = E105h
+                                      0080 Proprietary-File Size = 0080h 128 bytes
+                                          82 Proprietary-File READ Access Condition = 82h, i.e. Limited READ access, granted
+                                             based on proprietary methods, after authentication with key 2h
+                                            83 Proprietary-File WRITE Access Condition = 83h, i.e. Limited READWRITE access,
+                                               granted based on proprietary methods, after authentication with key 3h.
+                                              000000000000000000 empty
+
+modified content (compatibility container):
+0017200080007f0406e105008000000000000000000000000000000000000000
+
+0017 cclen = 23 bytes
+    20 mapping version 2.0
+      0080 MLe 128 bytes
+          007f MLc 127 bytes
+              NDEF-File Ctrl TLV
+              04 indicates the NDEF-File_Ctrl_TLV
+                06 6 bytes
+                  e105 NDEF File Identifier = E105h 
+                      0080 NDEF-File Size = 0080h 128 bytes
+                          00 NDEF-File READ Access Condition = 00h, i.e. READ access granted without any security
+                            00 NDEF-File WRITE Access Condition = 00h, i.e. WRITE access granted without any security
+                               000000000000000000 empty
+ 
+```
  
 ## file number 01 (size: 256 bytes): usage as card holders data, settings and extended log file
 
