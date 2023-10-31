@@ -1,17 +1,35 @@
 # Canteen application with NXP's NTAG424DNA tag
 
+This sample application shows how to run a complex app on a NFC tag that is not designed for this kind of application. 
+The NTAG 424 DNA is produced by NXP and has a user memory of 416 bytes that is not available in one block but divided 
+in 3 **Standard Files**:
+- file 01 with a memory of 32 bytes,
+- file 02 with a memory of 256 bytes and 
+- file 03 with a memory of 128 bytes.
+
+The access to the the files can get key secured - the tag offers an AES-128 encrypted protection.
+
+It's nice to have a pre defined file structure but two file types are missing for a payment application: a **Value File** 
+for holding the deposits and a **Cyclic Record File** for a transaction log management. But the file 02 is large enough to 
+store a virtual value and cyclic records file in the memory (for a deeper description see below).
+
+But I need to place a warning note: If you would use a Mifare DESFire EVx tag instead you could finalize the transaction 
+with a **commit command** that is not applicable on Standard files. That means you cannot control the file status when 
+the user moves the the tag out of NFC reader field. My recommendation is: the user should lay the tag in a bowl until the 
+transaction is finished.
+
 This app has 4 fragments showing the different handling of data on the tag:
 
 ## 1 home fragment
 
-The **home fragment** is the clients screen providing the (remaining) value on the tag and the transaction log file.
+The **home fragment** is the client's screen providing the (remaining) value on the tag and the transaction log file.
 
 ## 2 cashier fragment
 
 This is the main workplace for the cashier that is selling goods. The cashier can be a vending machine of course.
 
 The app is using a very simple goods and and machine logging system (use 256 different product groups and
-cash register numbers).
+cashier machine numbers).
 
 As the deposit is hosted in a **Virtual Value file** there is no real amount but only "units" available. This 
 app is not using a "currency" field. For example, 100 "units" are 100 cent meaning 1 USD or 1 Euro. 
@@ -47,7 +65,7 @@ in an application).
 For this reason I'm using a **Virtual Value File** that can be placed in one of the standard files and acts like a 
 "real" one - you can credit or debit the value and get the balance. All **writing access** is secured by a key using 
 a key derivation (PBKDF2, 10000 iterations, 16 bytes resulting key length, algorithm PBKDF2WithHmacSHA1). 
-All data is secured by a 12 bytes long checksum based on a SHA-256 hash calculation but shortened to have a complete
+All **data is secured by a 12 bytes long checksum based on a SHA-256 hash** calculation but shortened to have a complete
 (exported) file size of 48 bytes.
 
 # Virtual Cyclic Records File
@@ -62,7 +80,7 @@ You can add a record, show the last record, get a list with all records (sorted 
 All **writing access** is secured by a key using a key derivation (PBKDF2, 10000 iterations, 16 bytes resulting key length, 
 algorithm PBKDF2WithHmacSHA1).
 
-All data is secured by a 12 bytes long checksum based on a SHA-256 hash calculation but shortened to a multiple of 16 bytes export 
+All **data is secured by a 12 bytes long checksum based on a SHA-256 hash** calculation but shortened to a multiple of 16 bytes export 
 size.
 
 # data security
