@@ -22,8 +22,12 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -43,6 +47,17 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
     private static final String TAG = PersonalizeTagFragment.class.getName();
     private com.google.android.material.textfield.TextInputEditText cardholderName, cardId;
     private com.google.android.material.textfield.TextInputEditText resultNfcWriting;
+
+    /**
+     * section for transaction recyclerview
+     */
+
+    private ArrayList<TransactionModel> transactionModelArrayList;
+    private TransactionRVAdapter transactionRVAdapter;
+    private RecyclerView transactionRV;
+
+
+
 
     private final String lineSeparator = "---------------------";
     private PreferencesHandling preferencesHandling;
@@ -98,6 +113,18 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         // todo remove testdata
         cardholderName.setText("name");
         cardId.setText("1234");
+
+        // transaction recyclerview
+        transactionModelArrayList = new ArrayList<>();
+        transactionRVAdapter = new TransactionRVAdapter(transactionModelArrayList, getContext());
+        transactionRV = getView().findViewById(R.id.idRvTransactions);
+
+        // setting layout manager for our recycler view.
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
+        transactionRV.setLayoutManager(linearLayoutManager);
+
+        // setting our adapter to recycler view.
+        transactionRV.setAdapter(transactionRVAdapter);
 
     }
 
@@ -375,6 +402,88 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
+        // run a debit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
+        timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        amPmMarker = "A";
+        creditDebitMarker = "D";
+        bookingUnits = "000340";
+        machineNumber = (byte) 0x11;
+        goodType = (byte) 0x01;
+        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vvf.debit(Integer.parseInt(bookingUnits));
+        vcrf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVvf = vvf.exportVvf();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Value File, aborted");
+            return false;
+        }
+        exportedVcrf = vcrf.exportVcrf();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Cyclic Records File, aborted");
+            return false;
+        }
+
+        writeToUiAppend(resultNfcWriting, "remaining balance on tag: " + vvf.getBalance());
+
+        // show transactions
+        List<byte[]> transactionRecordsByte= vcrf.getRecordList();
+        List<TransactionRecord> transactionRecordList = new ArrayList<>();
+        // fill the list of transactionRecords
+        for (int i = 0; i < transactionRecordsByte.size(); i++) {
+            TransactionRecord trList = new TransactionRecord(transactionRecordsByte.get(i));
+            if (trList.isRecordValid()) {
+                Log.d(TAG, "add record " + i);
+                transactionRecordList.add(trList);
+            }
+        }
+        // now get the data for transactionModel
+        transactionModelArrayList = new ArrayList<>();
+        for (int i = 0; i < transactionRecordList.size(); i++) {
+            TransactionRecord trSingle = transactionRecordList.get(i);
+            LookupTable lt = new LookupTable(trSingle);
+            /*TransactionModel trModel = new TransactionModel(
+                    Utils.convertTimestampShortToLong(trSingle.getTimestampShort()),
+                    // todo lookups for data
+                    trSingle.getBookingUnits(),
+                    trSingle.getCreditDebitMarker(),
+                    Utils.byteToHex(trSingle.getMachineNumber()),
+                    Utils.byteToHex(trSingle.getGoodType())
+                    );*/
+            TransactionModel trModel = new TransactionModel(
+                    lt.getTransactionTimestamp(),
+                    // todo lookups for data
+                    lt.formatBookingUnits(),
+                    trSingle.getCreditDebitMarker(),
+                    Utils.byteToHex(trSingle.getMachineNumber()),
+                    Utils.byteToHex(trSingle.getGoodType())
+            );
+            transactionModelArrayList.add(trModel);
+        }
+
+        transactionRVAdapter = new TransactionRVAdapter(transactionModelArrayList, getContext());
+        getActivity().runOnUiThread(() -> {
+            // setting layout manager for our recycler view.
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
+            transactionRV.setLayoutManager(linearLayoutManager);
+            // setting our adapter to recycler view.
+            transactionRV.setAdapter(transactionRVAdapter);
+        });
+
+        writeToUiAppend(resultNfcWriting, "Number of recorded transactions: " + transactionModelArrayList.size());
 
 
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");

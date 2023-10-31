@@ -13,7 +13,9 @@ import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -360,6 +362,28 @@ public class Utils {
         } else {
             return new SimpleDateFormat("ddMMyyyyHHmmss").format(new Date());
         }
+    }
+
+    public static String convertTimestampShortToLong(String timestampShort) {
+        Date timestamp;
+        try {
+            timestamp = new SimpleDateFormat("ddMMyyyyHHmmss").parse(timestampShort);
+        } catch (ParseException e) {
+            // throw new RuntimeException(e);
+            return "";
+        }
+        return new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(timestamp);
+    }
+
+    public static String convertTimestampShortToLongReversed(String timestampShort) {
+        Date timestamp;
+        try {
+            timestamp = new SimpleDateFormat("ddMMyyyyHHmmss").parse(timestampShort);
+        } catch (ParseException e) {
+            // throw new RuntimeException(e);
+            return "";
+        }
+        return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(timestamp);
     }
 
     public static byte[] generateTestData(int length) {

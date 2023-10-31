@@ -117,15 +117,35 @@
                     tools:ignore="KeyboardInaccessibleWidget" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:id="@+id/tvNdefMessage"
-                android:layout_width="wrap_content"
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="8dp"
-                android:hint="the NDEF formatted message comes here"
-                android:textSize="16sp" />
+                android:layout_marginTop="8dp"
+                app:dividerInsetEnd="8dp"
+                app:dividerInsetStart="8dp" />
+
+            <TextView
+                android:id="@+id/tvTransactionsHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:text="Last transactions"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <!--recycler view for displaying our courses-->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/idRvTransactions"
+                android:paddingTop="6dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:dividerInsetEnd="8dp"
+                app:dividerInsetStart="8dp" />
 
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
