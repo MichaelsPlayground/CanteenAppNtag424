@@ -165,15 +165,114 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
 
         // step 2 authenticate with default key
         writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 02: authenticate the application with default key 0");
-        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber0, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "step 02: authenticate the application with default key 2");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber2, defaultApplicationKey);
         if (success) {
-            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 0 was SUCCESSFUL");
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 2 was SUCCESSFUL");
         } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 0, aborted");
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 2, aborted");
             return false;
         }
 
+/*
+modified:
+
+step 0x: read the file settings of all files
+fileNumber: 01
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 00
+accessRights R  | W:   E0
+accessRights RW:       0
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        0
+fileSize: 32
+
+fileNumber: 02
+fileType: 0 (Standard)
+communicationSettings: 03 (Encrypted)
+accessRights RW | CAR: 12
+accessRights R  | W:   34
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        3
+accessRights W:        4
+fileSize: 256
+
+fileNumber: 03
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 12
+accessRights R  | W:   E4
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        14
+accessRights W:        4
+fileSize: 128
+ */
+/*
+original/fabric:
+
+fileNumber: 01
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 00
+accessRights R  | W:   E0
+accessRights RW:       0
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        0
+fileSize: 32
+
+fileNumber: 02
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: E0
+accessRights R  | W:   EE
+accessRights RW:       14
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        14
+fileSize: 256
+
+fileNumber: 03
+fileType: 0 (Standard)
+communicationSettings: 03 (Encrypted)
+accessRights RW | CAR: 30
+accessRights R  | W:   23
+accessRights RW:       3
+accessRights CAR:      0
+accessRights R:        2
+accessRights W:        3
+fileSize: 128
+ */
+
+        // new version
+        // step 3 change the CommunicationMode of file 02 from Full to Plain
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 03: change the CommunicationMode of file 02 from Full to Plain");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, Ntag424DnaMethods.CommunicationSettings.Plain, 14, 0, 14, 14, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the CommunicationMode of file 02 from Full to Plain was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the CommunicationMode of file 02 from Full to Plain, aborted");
+            //todo return false;
+        }
+
+        // step 3 change the CommunicationMode of file 03 from Plain to Full
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 03: change the CommunicationMode of file 03 from Plain to Full");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, Ntag424DnaMethods.CommunicationSettings.Full, 1, 2, 3, 4, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the CommunicationMode of file 03 from Plain to Full was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the CommunicationMode of file 03 from Plain to Full, aborted");
+            // todo return false;
+        }
+
+/*
+        // old version
         // step 3 change the CommunicationMode of file 02 from Plain to Full
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 03: change the CommunicationMode of file 02 from Plain to Full");
@@ -195,7 +294,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in changing the CommunicationMode of file 03 from Full to Plain, aborted");
             // todo return false;
         }
-
+*/
         // step 2 write the NDEF template to the file 02
 
         // step  authenticate with key 00 (read & write key)
@@ -252,7 +351,9 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         byte[] cardholderNameFull = new byte[16];
         int offsetCardholderName = 0;
         System.arraycopy(cardholderNameString.getBytes(StandardCharsets.UTF_8), 0, cardholderNameFull, 0, cardholderIdString.getBytes(StandardCharsets.UTF_8).length);
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardholderNameFull, offsetCardholderName, cardholderNameFull.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardholderNameFull, offsetCardholderName, cardholderNameFull.length);
+        // success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardholderNameFull, offsetCardholderName, cardholderNameFull.length, false);
+        //
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the cardholder name was SUCCESSFUL");
         } else {
@@ -260,11 +361,12 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
-        // the cardId is maximum 16 bytes long and written to file 01 @offset 16
+        // the cardId is maximum 16 bytes long and written to file 02 @offset 16
         byte[] cardIdFull = new byte[16];
         int offsetCardId = 16;
         System.arraycopy(cardholderIdString.getBytes(StandardCharsets.UTF_8), 0, cardIdFull, 0, cardholderIdString.getBytes(StandardCharsets.UTF_8).length);
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardIdFull, offsetCardId, cardIdFull.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardIdFull, offsetCardId, cardIdFull.length);
+        // success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardIdFull, offsetCardId, cardIdFull.length, false);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the cardId was SUCCESSFUL");
         } else {
@@ -278,7 +380,8 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         int offsetVvf = 32;
         VirtualValueFile vvf = new VirtualValueFile((byte) 0x04, applicationKey4);
         byte[] exportedVvf = vvf.exportVvf();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length);
+        // success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
         } else {
@@ -293,7 +396,8 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         byte numberOfRecords = (byte) 0x08;
         VirtualCyclicRecordFile vcrf = new VirtualCyclicRecordFile((byte) 0x05, numberOfRecords, applicationKey4);
         byte[] exportedVcrf = vcrf.exportVcrf();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length);
+        //success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
         } else {
@@ -302,7 +406,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         }
 
         writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: read the file settings of file 02");
+        writeToUiAppend(resultNfcWriting, "step 0x: read all file settings");
         FileSettings[] allFileSettings = ntag424DnaMethods.getAllFileSettings();
         FileSettings fs01 = allFileSettings[0];
         writeToUiAppend(resultNfcWriting, fs01.dump());
@@ -325,10 +429,10 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         // read content file 02
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: read the content of file 02");
-        byte[] contentCard = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 0, 32);
-        byte[] contentValue = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 32, 48);
-        byte[] contentCyclic1 = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 80, 112);
-        byte[] contentCyclic2 = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 192, 64);
+        byte[] contentCard = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 0, 32);
+        byte[] contentValue = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 32, 48);
+        byte[] contentCyclic1 = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 80, 112);
+        byte[] contentCyclic2 = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 192, 64);
         byte[] contentCyclic = new byte[contentCyclic1.length + contentCyclic2.length];
         System.arraycopy(contentCyclic1, 0, contentCyclic, 0, contentCyclic1.length);
         System.arraycopy(contentCyclic2, 0, contentCyclic, contentCyclic1.length, contentCyclic2.length);
@@ -352,6 +456,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
+        /*
         // write to file 03
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: write content to file 03");
@@ -363,17 +468,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in writing content to file 03, aborted");
             return false;
         }
-
-        // read content from file 03
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: read content of file 03");
-        byte[] content03Read = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, 0, 128);
-        if (content03Read != null) {
-            writeToUiAppend(resultNfcWriting, printData("content file 03\n", content03Read));
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 03, aborted");
-            return false;
-        }
+*/
 
         // step  authenticate with key 01 (read & write key)
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -383,6 +478,17 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
         } else {
             writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            return false;
+        }
+
+        // read content from file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: read content of file 03");
+        byte[] content03Read = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, 0, 128);
+        if (content03Read != null) {
+            writeToUiAppend(resultNfcWriting, printData("content file 03\n", content03Read));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 03, aborted");
             return false;
         }
 
@@ -409,7 +515,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         vcrf.addRecord(applicationKey4, tr.getRecord());
         // write data back to files
         exportedVvf = vvf.exportVvf();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
         } else {
@@ -417,7 +523,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
         exportedVcrf = vcrf.exportVcrf();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
         } else {
@@ -444,7 +550,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         vcrf.addRecord(applicationKey4, tr.getRecord());
         // write data back to files
         exportedVvf = vvf.exportVvf();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
         } else {
@@ -452,7 +558,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
         exportedVcrf = vcrf.exportVcrf();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
         } else {
@@ -479,7 +585,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         vcrf.addRecord(applicationKey4, tr.getRecord());
         // write data back to files
         exportedVvf = vvf.exportVvf();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
         } else {
@@ -487,7 +593,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
         exportedVcrf = vcrf.exportVcrf();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
         } else {
@@ -557,6 +663,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         writeToUiAppend(resultNfcWriting, printData("ndefMessage", ndefMessageByte));
 
         // step  authenticate with key 01 (read & write key)
+        Log.d(TAG, "Authenticate with default key 1");
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
         success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
@@ -566,7 +673,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
             return false;
         }
-
+/*
         // write NDEF message to file 03
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: write NDEF message to file 03");
@@ -577,19 +684,21 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 01, aborted");
             return false;
         }
-/*
+*/
         // using Virtual File
+        Log.d(TAG, "*** Use a Virtual File ***");
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: use a Virtual File in file 03");
         VirtualFile vf = new VirtualFile(applicationKey4);
         byte[] exportedVf = vf.exportVirtualFile();
+        Log.d(TAG, printData("** exportedVf**", exportedVf));
         writeToUiAppend(resultNfcWriting, printData("exportedVirtualFile\n", exportedVf));
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVvf, offsetVvf, exportedVf.length, false);
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVf.length, false);
         if (success) {
             writeToUiAppend(resultNfcWriting, "saving of the Virtual File was SUCCESSFUL");
         } else {
             writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
-            return false;
+            //return false;
         }
 
         // run a credit transaction
@@ -612,12 +721,12 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         vf.addRecord(applicationKey4, tr.getRecord());
         // write data back to files
         exportedVf = vf.exportVirtualFile();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVvf.length, false);
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVf.length, false);
         if (success) {
             writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
         } else {
             writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
-            return false;
+            //return false;
         }
 
         // run a debit transaction
@@ -644,7 +753,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
         } else {
             writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
-            return false;
+            //return false;
         }
 
         // run a 2.nd debit transaction
@@ -662,6 +771,14 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;
         }
+        // testing the Virtual File import constructor
+        VirtualFile vf2 = new VirtualFile(exportedVf, true);
+        if (vf2.isVirtualFileValid()) {
+            // proceed
+        } else {
+            writeToUiAppend(resultNfcWriting, "The Virtual File 2 is not valid, aborted");
+            return false;
+        }
         vf.debit(Integer.parseInt(bookingUnits));
         vf.addRecord(applicationKey4, tr.getRecord());
         // write data back to files
@@ -671,13 +788,9 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
         } else {
             writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
-            return false;
+            //return false;
         }
 
-
-
-
-*/
 
 
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -761,7 +874,6 @@ accessRights CAR:      0
 accessRights R:        2
 accessRights W:        3
 fileSize: 128
-
  */
 
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");

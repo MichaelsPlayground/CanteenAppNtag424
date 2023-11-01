@@ -51,7 +51,6 @@ public class VirtualFile {
 
     private final int MAXIMUM_NUMBER_OF_RECORDS = 5; // note: changing of this parameter changes file size, see constructor VirtualFile(byte[] exportedVf)
     private final int RECORD_SIZE = 16; // note: changing of this parameter changes file size, see constructor VirtualFile(byte[] exportedVf)
-    private byte maximumRecords;
     private byte[][] records;
     private byte lastRecord;
     private byte numberOfRecords;
@@ -77,8 +76,14 @@ public class VirtualFile {
             generatedKey = secretKeyFactory.generateSecret(keySpec).getEncoded();
             //Log.d(TAG, Utils.printData("generatedKey", generatedKey));
             //Log.d(TAG, Utils.printData("salt", salt));
+            // setup value file
             balance = 0;
             balance_ByteArray = intToByteArray(balance);
+            // setup cyclic records file
+            records = new byte[MAXIMUM_NUMBER_OF_RECORDS][RECORD_SIZE];
+            lastRecord = 0;
+            numberOfRecords = 0;
+            // secure the file
             byte[] chkSum = calculateChecksum();
             //Log.d(TAG, Utils.printData("chkSum", chkSum));
             if (chkSum == null) {
@@ -98,19 +103,31 @@ public class VirtualFile {
         }
     }
 
-    public VirtualFile(byte[] exportedVvf, boolean check) {
-        if (exportedVvf == null) {
-            Log.e(TAG, "exportedVvf is NULL, aborted");
+    public VirtualFile(byte[] exportedVf, boolean check) {
+        if (exportedVf == null) {
+            Log.e(TAG, "exportedVf is NULL, aborted");
             return;
         }
-        if (exportedVvf.length != 48) {
-            Log.e(TAG, "exportedVvf length is not 48, aborted");
+        if (exportedVf.length != 128) {
+            Log.e(TAG, "exportedVf length is not 128, aborted");
             return;
         }
-        salt = Arrays.copyOfRange(exportedVvf, 1, (1 + SALT_LENGTH));
-        generatedKey = Arrays.copyOfRange(exportedVvf, (1 + SALT_LENGTH), (1 + SALT_LENGTH + GENERATED_KEY_LENGTH));
-        balance_ByteArray = Arrays.copyOfRange(exportedVvf, (1 + SALT_LENGTH + GENERATED_KEY_LENGTH), (1 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH));
-        checksum = Arrays.copyOfRange(exportedVvf, (1 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH), (1 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + CHECKSUM_LENGTH));
+        // security
+        salt = Arrays.copyOfRange(exportedVf, 0, (0 + SALT_LENGTH));
+        generatedKey = Arrays.copyOfRange(exportedVf, (0 + SALT_LENGTH), (0 + SALT_LENGTH + GENERATED_KEY_LENGTH));
+        // value file
+        balance_ByteArray = Arrays.copyOfRange(exportedVf, (0 + SALT_LENGTH + GENERATED_KEY_LENGTH), (0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH));
+        // record file
+        numberOfRecords = exportedVf[(0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 1)];
+        lastRecord = exportedVf[(0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 2)];
+        records = new byte[MAXIMUM_NUMBER_OF_RECORDS][RECORD_SIZE];
+        int pos = 0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 3;
+        for (int i = 0; i < MAXIMUM_NUMBER_OF_RECORDS; i++) {
+            byte[] record = Arrays.copyOfRange(exportedVf, (pos + (i * RECORD_SIZE)), (pos + ((i + 1) * RECORD_SIZE)));
+            records[i] = record;
+        }
+        pos = pos + (MAXIMUM_NUMBER_OF_RECORDS * RECORD_SIZE + 1);
+        checksum = Arrays.copyOfRange(exportedVf, pos, (pos + CHECKSUM_LENGTH));
         // verify the checksum
         byte[] chkSumOld = calculateChecksum();
         //Log.d(TAG, Utils.printData("chkSum", chkSum));
@@ -132,6 +149,20 @@ public class VirtualFile {
         balance = intFromByteArray(balance_ByteArray);
         isVirtualFileValid = true;
         Log.i(TAG, "VirtualFile is active");
+/*
+        baos.write(salt, 0, SALT_LENGTH); // 16 bytes long
+        baos.write(generatedKey, 0, GENERATED_KEY_LENGTH); // 16 bytes long
+        // value file
+        baos.write(balance_ByteArray, 0, BALANCE_LENGTH); // 4 bytes long
+        // record file
+        baos.write(numberOfRecords); // 1 byte long
+        baos.write(lastRecord); // 1 byte long
+        for (int i = 0; i < MAXIMUM_NUMBER_OF_RECORDS; i++) {
+            baos.write(records[i], 0, RECORD_SIZE);
+        } // size: maximumRecords * RECORD_SIZE, e.g. 5 * 16 = 80 bytes long
+        // save the shortened checksu
+        baos.write(checksum, 0, CHECKSUM_LENGTH); // 10 bytes long
+ */
     }
 
     /**
@@ -300,12 +331,11 @@ public class VirtualFile {
         System.arraycopy(record, 0, recordFull, 0, record.length);
         int lastRecordInt = lastRecord;
         int numberOfRecordsInt = numberOfRecords;
-        int maximumRecordsInt = maximumRecords;
         int writeToPositionInt = 0;
         if (numberOfRecordsInt > 0) {
             writeToPositionInt = lastRecordInt + 1;
         }
-        if (writeToPositionInt > (maximumRecordsInt - 1)) {
+        if (writeToPositionInt > (MAXIMUM_NUMBER_OF_RECORDS - 1)) {
             // we are cycling to the beginning
             writeToPositionInt = 0;
         } else {
@@ -343,7 +373,6 @@ public class VirtualFile {
         List<byte[]> recordList = new ArrayList<>();
         int lastRecordInt = lastRecord;
         int numberOfRecordsInt = numberOfRecords;
-        int maximumRecordsInt = maximumRecords;
         int positionInt = lastRecordInt;
         if (numberOfRecordsInt == 0) return recordList; // returns an empty list
         for (int i = 0; i < numberOfRecordsInt; i++) {
@@ -352,7 +381,7 @@ public class VirtualFile {
             positionInt --;
             if (positionInt < 0) {
                 // cycling to the end
-                positionInt = maximumRecordsInt - 1;
+                positionInt = MAXIMUM_NUMBER_OF_RECORDS - 1;
             }
         }
         return recordList;
@@ -412,16 +441,17 @@ public class VirtualFile {
         // security
         baos.write(salt, 0, SALT_LENGTH); // 16 bytes long
         baos.write(generatedKey, 0, GENERATED_KEY_LENGTH); // 16 bytes long
-        baos.write(checksum, 0, CHECKSUM_LENGTH); // 10 bytes long
+
         // value file
         baos.write(balance_ByteArray, 0, BALANCE_LENGTH); // 4 bytes long
         // record file
-        baos.write(maximumRecords); // 1  byte long
         baos.write(numberOfRecords); // 1 byte long
         baos.write(lastRecord); // 1 byte long
-        for (int i = 0; i < maximumRecords; i++) {
+        for (int i = 0; i < MAXIMUM_NUMBER_OF_RECORDS; i++) {
             baos.write(records[i], 0, RECORD_SIZE);
         } // size: maximumRecords * RECORD_SIZE, e.g. 5 * 16 = 80 bytes long
+        // save the shortened checksu
+        baos.write(checksum, 0, CHECKSUM_LENGTH); // 10 bytes long
         export = baos.toByteArray(); // 128 bytes long
         return export;
     }
@@ -459,10 +489,9 @@ public class VirtualFile {
             // value file
             baos.write(balance_ByteArray, 0, BALANCE_LENGTH); // 4 bytes long
             // cyclic record file
-            baos.write(maximumRecords); // 1  byte long
             baos.write(numberOfRecords); // 1 byte long
             baos.write(lastRecord); // 1 byte long
-            for (int i = 0; i < maximumRecords; i++) {
+            for (int i = 0; i < MAXIMUM_NUMBER_OF_RECORDS; i++) {
                 baos.write(records[i], 0, RECORD_SIZE);
             } // size: maximumRecords * RECORD_SIZE, e.g. 5 * 16 = 80 bytes long
             // output
@@ -473,5 +502,81 @@ public class VirtualFile {
         } catch (NoSuchAlgorithmException e) {
             return null;
         }
+    }
+
+    /**
+     * section for getter
+     */
+
+    public byte[] getSalt() {
+        return salt;
+    }
+
+    public int getNUMBER_OF_PBKDF2_ITERATIONS() {
+        return NUMBER_OF_PBKDF2_ITERATIONS;
+    }
+
+    public String getPBKDF2_ALGORITHM() {
+        return PBKDF2_ALGORITHM;
+    }
+
+    public String getSHA_HASH_ALGORITHM() {
+        return SHA_HASH_ALGORITHM;
+    }
+
+    public int getSALT_LENGTH() {
+        return SALT_LENGTH;
+    }
+
+    public int getGENERATED_KEY_LENGTH() {
+        return GENERATED_KEY_LENGTH;
+    }
+
+    public int getCHECKSUM_LENGTH() {
+        return CHECKSUM_LENGTH;
+    }
+
+    public byte[] getGeneratedKey() {
+        return generatedKey;
+    }
+
+    public byte[] getChecksum() {
+        return checksum;
+    }
+
+    public boolean isVirtualFileValid() {
+        return isVirtualFileValid;
+    }
+
+    public int getBALANCE_LENGTH() {
+        return BALANCE_LENGTH;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+
+    public byte[] getBalance_ByteArray() {
+        return balance_ByteArray;
+    }
+
+    public int getMAXIMUM_NUMBER_OF_RECORDS() {
+        return MAXIMUM_NUMBER_OF_RECORDS;
+    }
+
+    public int getRECORD_SIZE() {
+        return RECORD_SIZE;
+    }
+
+    public byte[][] getRecords() {
+        return records;
+    }
+
+    public byte getLastRecord() {
+        return lastRecord;
+    }
+
+    public byte getNumberOfRecords() {
+        return numberOfRecords;
     }
 }
