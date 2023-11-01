@@ -121,7 +121,24 @@ original content (compatibility container):
                                                granted based on proprietary methods, after authentication with key 3h.
                                               000000000000000000 empty
 
-modified content (compatibility container):
+modified content (compatibility container) for file 03 = E104h:
+0017200080007f0406e104008000000000000000000000000000000000000000
+
+0017 cclen = 23 bytes
+    20 mapping version 2.0
+      0080 MLe 128 bytes
+          007f MLc 127 bytes
+              NDEF-File Ctrl TLV
+              04 indicates the NDEF-File_Ctrl_TLV
+                06 6 bytes
+                  e104 NDEF File Identifier = E104h 
+                      0080 NDEF-File Size = 0080h 128 bytes
+                          00 NDEF-File READ Access Condition = 00h, i.e. READ access granted without any security
+                            00 NDEF-File WRITE Access Condition = 00h, i.e. WRITE access granted without any security
+                               000000000000000000 empty
+ 
+
+modified content (compatibility container) for file 03 = E105h:
 0017200080007f0406e105008000000000000000000000000000000000000000
 
 0017 cclen = 23 bytes

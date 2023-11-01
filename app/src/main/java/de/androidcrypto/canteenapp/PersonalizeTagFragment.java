@@ -311,7 +311,8 @@ fileSize: 128
         // step 1 write the changed NDEF compatibility container to the file 01
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: write a modified NDEF compatibility container to file 01");
-        byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("0017200080007f0406e105008000000000000000000000000000000000000000");
+        //byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("0017200080007f0406e105008000000000000000000000000000000000000000");
+        byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("0017200080007f0406e104008000000000000000000000000000000000000000");
         // This CC has one file only with file ID E105
         success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, modifiedNdefCompatibilityContainer, 0, 32);
         if (success) {

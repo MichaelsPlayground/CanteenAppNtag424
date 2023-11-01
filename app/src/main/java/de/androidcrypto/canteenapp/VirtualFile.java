@@ -113,21 +113,29 @@ public class VirtualFile {
             return;
         }
         // security
+        Log.d(TAG, Utils.printData("exportedVf", exportedVf));
         salt = Arrays.copyOfRange(exportedVf, 0, (0 + SALT_LENGTH));
+        Log.d(TAG, Utils.printData("salt", salt));
         generatedKey = Arrays.copyOfRange(exportedVf, (0 + SALT_LENGTH), (0 + SALT_LENGTH + GENERATED_KEY_LENGTH));
+        Log.d(TAG, Utils.printData("generatedKey", generatedKey));
         // value file
         balance_ByteArray = Arrays.copyOfRange(exportedVf, (0 + SALT_LENGTH + GENERATED_KEY_LENGTH), (0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH));
+        Log.d(TAG, Utils.printData("balance_ByteArray", balance_ByteArray));
         // record file
-        numberOfRecords = exportedVf[(0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 1)];
-        lastRecord = exportedVf[(0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 2)];
+        numberOfRecords = exportedVf[(0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 0)];
+        Log.d(TAG,"numberOfRecords: " + Utils.byteToHex(numberOfRecords));
+        lastRecord = exportedVf[(0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 1)];
+        Log.d(TAG,"lastRecord: " + Utils.byteToHex(lastRecord));
         records = new byte[MAXIMUM_NUMBER_OF_RECORDS][RECORD_SIZE];
-        int pos = 0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 3;
+        int pos = 0 + SALT_LENGTH + GENERATED_KEY_LENGTH + BALANCE_LENGTH + 2;
         for (int i = 0; i < MAXIMUM_NUMBER_OF_RECORDS; i++) {
             byte[] record = Arrays.copyOfRange(exportedVf, (pos + (i * RECORD_SIZE)), (pos + ((i + 1) * RECORD_SIZE)));
             records[i] = record;
+            Log.d(TAG,"i: " + i + Utils.printData("record", record));
         }
-        pos = pos + (MAXIMUM_NUMBER_OF_RECORDS * RECORD_SIZE + 1);
+        pos = pos + (MAXIMUM_NUMBER_OF_RECORDS * RECORD_SIZE);
         checksum = Arrays.copyOfRange(exportedVf, pos, (pos + CHECKSUM_LENGTH));
+        Log.d(TAG, Utils.printData("checksum", checksum));
         // verify the checksum
         byte[] chkSumOld = calculateChecksum();
         //Log.d(TAG, Utils.printData("chkSum", chkSum));
