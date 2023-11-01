@@ -578,6 +578,192 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
+        // using Virtual File
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: use a Virtual File in file 03");
+        VirtualFile vf = new VirtualFile(applicationKey4);
+        byte[] exportedVf = vf.exportVirtualFile();
+        writeToUiAppend(resultNfcWriting, printData("exportedVirtualFile\n", exportedVf));
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVvf, offsetVvf, exportedVf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "saving of the Virtual File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
+            return false;
+        }
+
+        // run a credit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a credit transaction");
+        // run a credit/charge transaction
+        timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        amPmMarker = "P";
+        creditDebitMarker = "C";
+        bookingUnits = "010000";
+        machineNumber = (byte) 0x01;
+        goodType = (byte) 0x00;
+        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vf.credit(applicationKey4, Integer.parseInt(bookingUnits));
+        vf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVf = vf.exportVirtualFile();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVvf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
+            return false;
+        }
+
+        // run a debit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
+        timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        amPmMarker = "A";
+        creditDebitMarker = "D";
+        bookingUnits = "000340";
+        machineNumber = (byte) 0x09;
+        goodType = (byte) 0x01;
+        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vf.debit(Integer.parseInt(bookingUnits));
+        vf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVf = vf.exportVirtualFile();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
+            return false;
+        }
+
+        // run a 2.nd debit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
+        timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        amPmMarker = "A";
+        creditDebitMarker = "D";
+        bookingUnits = "000230";
+        machineNumber = (byte) 0x17;
+        goodType = (byte) 0x02;
+        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vf.debit(Integer.parseInt(bookingUnits));
+        vf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVf = vf.exportVirtualFile();
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
+            return false;
+        }
+
+
+
+
+
+
+
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: read the file settings of all files");
+        FileSettings[] allFileSettingsN = ntag424DnaMethods.getAllFileSettings();
+        FileSettings fs01N = allFileSettingsN[0];
+        writeToUiAppend(resultNfcWriting, fs01N.dump());
+        FileSettings fs02N = allFileSettingsN[1];
+        writeToUiAppend(resultNfcWriting, fs02N.dump());
+        FileSettings fs03N = allFileSettingsN[2];
+        writeToUiAppend(resultNfcWriting, fs03N.dump());
+/*
+modified:
+
+step 0x: read the file settings of all files
+fileNumber: 01
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 00
+accessRights R  | W:   E0
+accessRights RW:       0
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        0
+fileSize: 32
+
+fileNumber: 02
+fileType: 0 (Standard)
+communicationSettings: 03 (Encrypted)
+accessRights RW | CAR: 12
+accessRights R  | W:   34
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        3
+accessRights W:        4
+fileSize: 256
+
+fileNumber: 03
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 12
+accessRights R  | W:   E4
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        14
+accessRights W:        4
+fileSize: 128
+ */
+/*
+original/fabric:
+
+fileNumber: 01
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 00
+accessRights R  | W:   E0
+accessRights RW:       0
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        0
+fileSize: 32
+
+fileNumber: 02
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: E0
+accessRights R  | W:   EE
+accessRights RW:       14
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        14
+fileSize: 256
+
+fileNumber: 03
+fileType: 0 (Standard)
+communicationSettings: 03 (Encrypted)
+accessRights RW | CAR: 30
+accessRights R  | W:   23
+accessRights RW:       3
+accessRights CAR:      0
+accessRights R:        2
+accessRights W:        3
+fileSize: 128
+
+ */
+
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");
         Log.d(TAG, "The tag was personalized with SUCCESS");
         playSinglePing(getContext());
