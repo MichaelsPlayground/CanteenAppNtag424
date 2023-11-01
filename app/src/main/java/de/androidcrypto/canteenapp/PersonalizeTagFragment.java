@@ -577,7 +577,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 01, aborted");
             return false;
         }
-
+/*
         // using Virtual File
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: use a Virtual File in file 03");
@@ -677,7 +677,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
 
 
 
-
+*/
 
 
         writeToUiAppend(resultNfcWriting, lineSeparator);
