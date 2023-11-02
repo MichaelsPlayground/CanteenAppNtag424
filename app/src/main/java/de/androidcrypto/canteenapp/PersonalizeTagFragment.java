@@ -138,6 +138,83 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         return inflater.inflate(R.layout.fragment_personalize_tag, container, false);
     }
 
+    private boolean runGetSettings() {
+        // this method tries to get the file settings and data on a NTAG424DNA tag with fabric settings
+
+        // step 1 select the application
+        boolean success;
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 01: select the application on the tag");
+        success = ntag424DnaMethods.selectNdefApplicationIso();
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "selecting the application was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in selecting the application, aborted");
+            return false;
+        }
+
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 02: read all file settings");
+        FileSettings[] allFileSettings = ntag424DnaMethods.getAllFileSettings();
+        FileSettings fs01 = allFileSettings[0];
+        writeToUiAppend(resultNfcWriting, fs01.dump());
+        FileSettings fs02 = allFileSettings[1];
+        writeToUiAppend(resultNfcWriting, fs02.dump());
+        FileSettings fs03 = allFileSettings[2];
+        writeToUiAppend(resultNfcWriting, fs03.dump());
+
+        // read content files 01, 02 and 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 03: read the contents of files 01 and 02");
+
+        byte[] contentFile01 = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, 0, 32);
+        byte[] contentFile02 = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 0, 256);
+
+        // step 2 authenticate with default key 3
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 04: authenticate the application with default key 3");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber3, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 3 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 3, aborted");
+            return false;
+        }
+
+        byte[] contentFile03 = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, 0, 128);
+        /*
+        byte[] contentCard = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 0, 32);
+        byte[] contentValue = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 32, 48);
+        byte[] contentCyclic1 = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 80, 112);
+        byte[] contentCyclic2 = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 192, 64);
+        byte[] contentCyclic = new byte[contentCyclic1.length + contentCyclic2.length];
+        System.arraycopy(contentCyclic1, 0, contentCyclic, 0, contentCyclic1.length);
+        System.arraycopy(contentCyclic2, 0, contentCyclic, contentCyclic1.length, contentCyclic2.length);
+*/
+        if (contentFile01 != null) {
+            writeToUiAppend(resultNfcWriting, printData("content file 01\n", contentFile01));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 01, aborted");
+            return false;
+        }
+        if (contentFile02 != null) {
+            writeToUiAppend(resultNfcWriting, printData("content file 02\n", contentFile02));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 02, aborted");
+            return false;
+        }
+        if (contentFile03 != null) {
+            writeToUiAppend(resultNfcWriting, printData("content file 03\n", contentFile03));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 03, aborted");
+            return false;
+        }
+
+
+
+        return true;
+    }
+
     private boolean runCompletePersonalize() {
         /*
         This are the steps that will run when a tag is tapped:
@@ -899,7 +976,8 @@ fileSize: 128
         ntag424DnaMethods = new Ntag424DnaMethods(resultNfcWriting, tag, getActivity());
 
         discoveredTag = tag;
-        boolean success = runCompletePersonalize();
+        //boolean success = runCompletePersonalize();
+        boolean success = runGetSettings();
     }
 
     /**
