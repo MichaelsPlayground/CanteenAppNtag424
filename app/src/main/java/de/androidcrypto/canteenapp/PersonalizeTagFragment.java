@@ -925,6 +925,38 @@ fileSize: 128
             //return false;
         }
 
+        // write the balance in a NDEF file 02
+        // create a NDEF message
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: create a NDEF message");
+        ndefRecord = NdefRecord.createTextRecord("en","English String Balance: 97,40");
+        ndefMessage = new NdefMessage(ndefRecord);
+        ndefMessageByte = ndefMessage.toByteArray();
+        writeToUiAppend(resultNfcWriting, printData("ndefMessage", ndefMessageByte));
+
+        // step  authenticate with key 01 (read & write key)
+        Log.d(TAG, "Authenticate with default key 1");
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            return false;
+        }
+
+        // write NDEF message to file 02
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write NDEF message to file 02");
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessageByte, 0, ndefMessageByte.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "write NDEF message to file 02 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 02, aborted");
+            return false;
+        }
+
 
 
         writeToUiAppend(resultNfcWriting, lineSeparator);

@@ -81,12 +81,12 @@ fileSize: 256
 fileNumber: 03
 fileType: 0 (Standard)
 communicationSettings: 03 (Encrypted)
-accessRights RW | CAR: 30
-accessRights R  | W:   23
-accessRights RW:       3
-accessRights CAR:      0
-accessRights R:        2
-accessRights W:        3
+accessRights RW | CAR: 12
+accessRights R  | W:   34
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        3
+accessRights W:        4
 fileSize: 128
 
 ---------------------
