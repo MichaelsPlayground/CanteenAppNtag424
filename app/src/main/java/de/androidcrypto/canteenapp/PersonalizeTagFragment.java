@@ -1064,9 +1064,9 @@ fileSize: 128
         ntag424DnaMethods = new Ntag424DnaMethods(resultNfcWriting, tag, getActivity());
 
         discoveredTag = tag;
-        boolean success = runCompletePersonalize();
+        //boolean success = runCompletePersonalize();
         //boolean success = runGetFabricSettings();
-        //boolean success = runGetPersonalizedSettings();
+        boolean success = runGetPersonalizedSettings();
     }
 
     /**
