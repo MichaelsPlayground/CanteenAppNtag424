@@ -6,10 +6,12 @@ import static de.androidcrypto.canteenapp.Utils.playSinglePing;
 import static de.androidcrypto.canteenapp.Utils.printData;
 
 import android.content.Intent;
+import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
+import android.nfc.tech.IsoDep;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NfcA;
 import android.os.Bundle;
@@ -27,6 +29,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.github.skjolber.ndef.Message;
+import com.github.skjolber.ndef.MimeRecord;
+
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -943,19 +949,34 @@ fileSize: 128
         sb.append("machine: ").append(lut.formatMachineNumber()).append("\n");
         sb.append("good: ").append(lut.formatGoodType()).append("\n");
         String record = sb.toString();
+
+        /*
+        // using ndef tools
+        MimeRecord mimeRecord = new MimeRecord();
+        mimeRecord.setMimeType("text/plain");
+        mimeRecord.setData(record.getBytes(StandardCharsets.UTF_8));
+        Message message = new Message(); //  com.github.skjolber.ndef.Message
+        message.add(mimeRecord);
+        NdefMessage ndefMessage2 = message.getNdefMessage();
+        byte[] ndefMessage2Bytes = ndefMessage2.toByteArray();
+        writeToUiAppend(resultNfcWriting, printData("ndefMessage2", ndefMessage2Bytes));
+
+         */
+
         ndefRecord = NdefRecord.createTextRecord("en",record);
         //ndefRecord = NdefRecord.createTextRecord("en","English String Balance: 97,40");
         ndefMessage = new NdefMessage(ndefRecord);
         ndefMessageByte = ndefMessage.toByteArray();
         writeToUiAppend(resultNfcWriting, printData("ndefMessage", ndefMessageByte));
 
+        /*
         // build the ndef header, maximum length is 255
         byte[] ndefMessageFull = new byte[ndefMessageByte.length + 3];
         ndefMessageFull[0] = (byte) 0x00; // not necessary
         ndefMessageFull[1] = (byte) ndefMessageByte.length;
         System.arraycopy(ndefMessageByte, 0, ndefMessageFull, 2, ndefMessageByte.length);
         ndefMessageFull[ndefMessageByte.length + 2] = (byte) 0x00; // not necessary
-
+*/
         // step  authenticate with key 01 (read & write key)
         Log.d(TAG, "Authenticate with default key 1");
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -971,7 +992,25 @@ fileSize: 128
         // write NDEF message to file 02
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: write NDEF message to file 02");
-        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessageFull, 0, ndefMessageFull.length);
+
+        // changing tag technology from IsoDep to Ndef
+
+        try {
+            IsoDep isoDep = IsoDep.get(discoveredTag);
+            isoDep.close();
+            Ndef ndef = Ndef.get(discoveredTag);
+            ndef.connect();
+            ndef.writeNdefMessage(ndefMessage);
+            writeToUiAppend(resultNfcWriting, "write NDEF message to file 02 was SUCCESSFUL");
+        } catch (IOException | FormatException e) {
+            //throw new RuntimeException(e);
+            writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 02, aborted " + e.getMessage());
+            return false;
+        }
+
+/*
+        //success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessageFull, 0, ndefMessageFull.length);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessage2Bytes, 0, ndefMessage2Bytes.length);
         if (success) {
             writeToUiAppend(resultNfcWriting, "write NDEF message to file 02 was SUCCESSFUL");
         } else {
@@ -990,6 +1029,8 @@ fileSize: 128
         writeToUiAppend(resultNfcWriting, fs02N.dump());
         FileSettings fs03N = allFileSettingsN[2];
         writeToUiAppend(resultNfcWriting, fs03N.dump());
+
+ */
 /*
 modified:
 
