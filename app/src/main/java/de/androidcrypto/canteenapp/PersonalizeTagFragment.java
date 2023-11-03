@@ -929,10 +929,32 @@ fileSize: 128
         // create a NDEF message
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: create a NDEF message");
-        ndefRecord = NdefRecord.createTextRecord("en","English String Balance: 97,40");
+        StringBuilder sb = new StringBuilder();
+        sb.append("remaining balance on the tag: ");
+        sb.append(Utils.convertIntegerInFloatString(vf.getBalance()));
+        sb.append("\n");
+        sb.append("last transaction: ");
+        TransactionRecord trLast = new TransactionRecord(vf.showLastRecord());
+        LookupTable lut = new LookupTable(trLast);
+        sb.append(lut.getTransactionTimestamp());
+        sb.append("\n");
+        sb.append("credit/debit: ").append(lut.formatCreditDebitMarker()).append("\n");
+        sb.append("booking: ").append(lut.formatBookingUnits()).append("\n");
+        sb.append("machine: ").append(lut.formatMachineNumber()).append("\n");
+        sb.append("good: ").append(lut.formatGoodType()).append("\n");
+        String record = sb.toString();
+        ndefRecord = NdefRecord.createTextRecord("en",record);
+        //ndefRecord = NdefRecord.createTextRecord("en","English String Balance: 97,40");
         ndefMessage = new NdefMessage(ndefRecord);
         ndefMessageByte = ndefMessage.toByteArray();
         writeToUiAppend(resultNfcWriting, printData("ndefMessage", ndefMessageByte));
+
+        // build the ndef header, maximum length is 255
+        byte[] ndefMessageFull = new byte[ndefMessageByte.length + 3];
+        ndefMessageFull[0] = (byte) 0x00; // not necessary
+        ndefMessageFull[1] = (byte) ndefMessageByte.length;
+        System.arraycopy(ndefMessageByte, 0, ndefMessageFull, 2, ndefMessageByte.length);
+        ndefMessageFull[ndefMessageByte.length + 2] = (byte) 0x00; // not necessary
 
         // step  authenticate with key 01 (read & write key)
         Log.d(TAG, "Authenticate with default key 1");
@@ -949,16 +971,16 @@ fileSize: 128
         // write NDEF message to file 02
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: write NDEF message to file 02");
-        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessageByte, 0, ndefMessageByte.length);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessageFull, 0, ndefMessageFull.length);
         if (success) {
             writeToUiAppend(resultNfcWriting, "write NDEF message to file 02 was SUCCESSFUL");
         } else {
             writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 02, aborted");
             return false;
         }
-
-
-
+        // working one: 0021d1011d5402656e73616d706c6520746578742042616c616e6365203132332c34350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        // not working:     d101205402656e456e676c69736820537472696e672042616c616e63653a2039372c3430a1d6a39d2c08d745be5f980d35b8e66945b28ecfb64d8193d22ba39284000024c22a7f1c2f41608422c6e6ee05080302ec8975c400aade56d4cb2271dddcb22305c78e0357407b9ecb93d2aadb9097ce031120230018430f0c0100000100ffff031120230018440f0d0003400901ffff031120230018440f0d0002501115ffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001c046633cd77b7d07a68a95f
+        // new:         009cd101985402656e72656d61696e696e672062616c616e6365206f6e20746865207461673a2039342c33300a6c617374207472616e73616374696f6e3a2030332e31312e323032332031343a33373a30310a6372656469742f64656269743a2044656269740a626f6f6b696e673a20322c33300a6d616368696e653a2031312076656e64696e67206d616368696e650a676f6f643a203120666f6f640a02501115ffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b5d0549c9c2f1d828011de8
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: read the file settings of all files");
         FileSettings[] allFileSettingsN = ntag424DnaMethods.getAllFileSettings();
@@ -1064,9 +1086,9 @@ fileSize: 128
         ntag424DnaMethods = new Ntag424DnaMethods(resultNfcWriting, tag, getActivity());
 
         discoveredTag = tag;
-        //boolean success = runCompletePersonalize();
+        boolean success = runCompletePersonalize();
         //boolean success = runGetFabricSettings();
-        boolean success = runGetPersonalizedSettings();
+        //boolean success = runGetPersonalizedSettings();
     }
 
     /**
