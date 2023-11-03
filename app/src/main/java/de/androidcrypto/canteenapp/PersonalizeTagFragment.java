@@ -1241,6 +1241,17 @@ fileSize: 128
             return false;
         }
 
+        // step 4 authenticate with default key
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 04: authenticate the application with default key 0");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber0, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 0 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 0, aborted");
+            return false;
+        }
+
         // step 2 restore the data in file 01 (original NDEF compatibility container)
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 2: restore the data in file 01 (original NDEF compatibility container)");
@@ -1256,8 +1267,12 @@ fileSize: 128
         // step 3 restore the data in file 02
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 3: restore the data in file 02");
-        byte[] originalFile02Content = new byte[256];
-        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, originalFile02Content, 0, 256);
+        byte[] originalFile02Content = new byte[128];
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, originalFile02Content, 0, 128);
+
+        //byte[] originalFile02Content = new byte[256];
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, originalFile02Content, 128, 128);
+
         if (success) {
             writeToUiAppend(resultNfcWriting, "restore the data in file 02 was SUCCESSFUL");
         } else {
@@ -1267,12 +1282,12 @@ fileSize: 128
 
         // step 4 authenticate with default key
         writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 04: authenticate the application with default key 1");
-        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "step 04: authenticate the application with default key 30");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber3, defaultApplicationKey);
         if (success) {
-            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 3 was SUCCESSFUL");
         } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 3, aborted");
             return false;
         }
 
