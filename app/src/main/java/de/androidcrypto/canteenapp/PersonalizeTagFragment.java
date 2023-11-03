@@ -452,8 +452,11 @@ fileSize: 128
         writeToUiAppend(resultNfcWriting, "step 0x: write a modified NDEF compatibility container to file 01");
         //byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("0017200080007f0406e105008000000000000000000000000000000000000000");
         byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("0017200080007f0406e104008000000000000000000000000000000000000000");
+        byte[] originalNdefCompatibilityContainer = Utils.hexStringToByteArray("001720010000ff0406e104010000000506e10500808283000000000000000000");
+
         // This CC has one file only with file ID E104
-        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, modifiedNdefCompatibilityContainer, 0, 32);
+        //success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, modifiedNdefCompatibilityContainer, 0, 32);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, originalNdefCompatibilityContainer, 0, 32);
         if (success) {
             writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
         } else {
@@ -1111,6 +1114,187 @@ fileSize: 128
         return true;
     }
 
+    private boolean runResetToOriginalSettings() {
+        /*
+        This are the steps that will run when a tag is tapped:
+
+         */
+
+        doVibrate(getActivity());
+
+        // step 1 select the application
+        boolean success;
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 01: select the application on the tag");
+        success = ntag424DnaMethods.selectNdefApplicationIso();
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "selecting the application was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in selecting the application, aborted");
+            return false;
+        }
+
+        // step 2 authenticate with default key
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 02: authenticate the application with default key 0");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber0, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 0 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 0, aborted");
+            return false;
+        }
+
+        // step 3 change the fileSettings of file 02
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 03: change the fileSettings of file 02");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, Ntag424DnaMethods.CommunicationSettings.Plain, 14, 0, 14, 14, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the fileSettings of file 02 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the fileSettings of file 02, aborted");
+            //todo return false;
+        }
+
+        // step 4 change the fileSettings of file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 04: change the fileSettings of file 03");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, Ntag424DnaMethods.CommunicationSettings.Full, 3, 0, 2, 3, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the fileSettings of file 03 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the fileSettings of file 03, aborted");
+            //todo return false;
+        }
+
+        // step 5 restore the data in file 01 (original NDEF compatibility container)
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 5: restore the data in file 01 (original NDEF compatibility container)");
+        byte[] originalNdefCompatibilityContainer = Utils.hexStringToByteArray("001720010000ff0406e104010000000506e10500808283000000000000000000");
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, originalNdefCompatibilityContainer, 0, 32);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "restore the data in file 01 (original NDEF compatibility container) was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in restoring the data in file 01 (original NDEF compatibility container), aborted");
+            // todo return false;
+        }
+
+        // step 6 restore the data in file 02
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 6: restore the data in file 02");
+        byte[] originalFile02Content = new byte[256];
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, originalFile02Content, 0, 256);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "restore the data in file 02 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in restoring the data in file 02, aborted");
+            // todo return false;
+        }
+
+        // step 7 authenticate with default key
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 07: authenticate the application with default key 1");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            return false;
+        }
+
+        // step 8 restore the data in file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 8: restore the data in file 03");
+        //
+        byte[] originalFile03Content = Utils.hexStringToByteArray("007e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, originalFile03Content, 0, 128, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "restore the data in file 03 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in restoring the data in file 03, aborted");
+            // todo return false;
+        }
+
+        writeToUiAppend(resultNfcWriting, "The tag was reset with SUCCESS");
+        Log.d(TAG, "The tag was reset with SUCCESS");
+        playSinglePing(getContext());
+        return true;
+    }
+
+    private boolean runRestoreOriginalFileContent() {
+        /*
+        This are the steps that will run when a tag is tapped:
+
+         */
+
+        doVibrate(getActivity());
+
+        // step 1 select the application
+        boolean success;
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 01: select the application on the tag");
+        success = ntag424DnaMethods.selectNdefApplicationIso();
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "selecting the application was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in selecting the application, aborted");
+            return false;
+        }
+
+        // step 2 restore the data in file 01 (original NDEF compatibility container)
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 2: restore the data in file 01 (original NDEF compatibility container)");
+        byte[] originalNdefCompatibilityContainer = Utils.hexStringToByteArray("001720010000ff0406e104010000000506e10500808283000000000000000000");
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, originalNdefCompatibilityContainer, 0, 32);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "restore the data in file 01 (original NDEF compatibility container) was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in restoring the data in file 01 (original NDEF compatibility container), aborted");
+            // todo return false;
+        }
+
+        // step 3 restore the data in file 02
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 3: restore the data in file 02");
+        byte[] originalFile02Content = new byte[256];
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, originalFile02Content, 0, 256);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "restore the data in file 02 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in restoring the data in file 02, aborted");
+            // todo return false;
+        }
+
+        // step 4 authenticate with default key
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 04: authenticate the application with default key 1");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            return false;
+        }
+
+        // step 5 restore the data in file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 5: restore the data in file 03");
+        //
+        byte[] originalFile03Content = Utils.hexStringToByteArray("007e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, originalFile03Content, 0, 128, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "restore the data in file 03 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in restoring the data in file 03, aborted");
+            // todo return false;
+        }
+
+        writeToUiAppend(resultNfcWriting, "The tag was reset with SUCCESS");
+        Log.d(TAG, "The tag was reset with SUCCESS");
+        playSinglePing(getContext());
+        return true;
+    }
+
     // This method is running in another thread when a card is discovered
     // !!!! This method cannot cannot direct interact with the UI Thread
     // Use `runOnUiThread` method to change the UI from this method
@@ -1127,9 +1311,11 @@ fileSize: 128
         ntag424DnaMethods = new Ntag424DnaMethods(resultNfcWriting, tag, getActivity());
 
         discoveredTag = tag;
-        boolean success = runCompletePersonalize();
+        //boolean success = runCompletePersonalize();
         //boolean success = runGetFabricSettings();
         //boolean success = runGetPersonalizedSettings();
+        //boolean success = runResetToOriginalSettings();
+        boolean success = runRestoreOriginalFileContent();
     }
 
     /**
