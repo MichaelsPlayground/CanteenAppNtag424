@@ -329,17 +329,17 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         // step 1 write the changed NDEF compatibility container to the file 01
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: write a modified NDEF compatibility container to file 01");
-        //byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("0017200080007f0406e105008000000000000000000000000000000000000000");
-        byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("0017200080007f0406e104008000000000000000000000000000000000000000");
-        byte[] originalNdefCompatibilityContainer = Utils.hexStringToByteArray("001720010000ff0406e104010000000506e10500808283000000000000000000");
+        //byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("00172000c000bf0406e10400c000800000000000000000000000000000000000"); // write access prohibited
+        byte[] modifiedNdefCompatibilityContainer = Utils.hexStringToByteArray("00172000c000bf0406e10400c000000000000000000000000000000000000000"); // free write access
+        //byte[] originalNdefCompatibilityContainer = Utils.hexStringToByteArray("001720010000ff0406e104010000000506e10500808283000000000000000000");
 
         // This CC has one file only with file ID E104
-        //success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, modifiedNdefCompatibilityContainer, 0, 32);
-        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, originalNdefCompatibilityContainer, 0, 32);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, modifiedNdefCompatibilityContainer, 0, 32);
+        //success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, originalNdefCompatibilityContainer, 0, 32);
         if (success) {
-            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+            writeToUiAppend(resultNfcWriting, "write a modified NDEF compatibility container to file 01 was SUCCESSFUL");
         } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            writeToUiAppend(resultNfcWriting, "FAILURE in write a modified NDEF compatibility container to file 01, aborted");
             // todo return false;
         }
 
