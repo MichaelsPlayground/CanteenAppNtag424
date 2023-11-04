@@ -1,6 +1,7 @@
 package de.androidcrypto.canteenapp;
 
-import static de.androidcrypto.canteenapp.Constants.*;
+import static de.androidcrypto.canteenapp.Constants.applicationKey4;
+import static de.androidcrypto.canteenapp.Constants.defaultApplicationKey;
 import static de.androidcrypto.canteenapp.Utils.doVibrate;
 import static de.androidcrypto.canteenapp.Utils.playSinglePing;
 import static de.androidcrypto.canteenapp.Utils.printData;
@@ -13,7 +14,6 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
 import android.nfc.tech.Ndef;
-import android.nfc.tech.NfcA;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -29,9 +29,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.github.skjolber.ndef.Message;
-import com.github.skjolber.ndef.MimeRecord;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -39,10 +36,10 @@ import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link PersonalizeTagFragment#newInstance} factory method to
+ * Use the {@link PersonalizeTagFragment_v2#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PersonalizeTagFragment extends Fragment implements NfcAdapter.ReaderCallback {
+public class PersonalizeTagFragment_v2 extends Fragment implements NfcAdapter.ReaderCallback {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -52,7 +49,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
     private String mParam1;
     private String mParam2;
 
-    private static final String TAG = PersonalizeTagFragment.class.getName();
+    private static final String TAG = PersonalizeTagFragment_v2.class.getName();
     private com.google.android.material.textfield.TextInputEditText cardholderName, cardId, remainingDeposit;
     private com.google.android.material.textfield.TextInputEditText resultNfcWriting;
 
@@ -76,7 +73,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
 
     private byte[] tagUid; // written by onDiscovered
 
-    public PersonalizeTagFragment() {
+    public PersonalizeTagFragment_v2() {
         // Required empty public constructor
     }
 
@@ -89,8 +86,8 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
      * @return A new instance of fragment ReceiveFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static PersonalizeTagFragment newInstance(String param1, String param2) {
-        PersonalizeTagFragment fragment = new PersonalizeTagFragment();
+    public static PersonalizeTagFragment_v2 newInstance(String param1, String param2) {
+        PersonalizeTagFragment_v2 fragment = new PersonalizeTagFragment_v2();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -313,6 +310,127 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
+/*
+modified:
+
+step 0x: read the file settings of all files
+fileNumber: 01
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 00
+accessRights R  | W:   E0
+accessRights RW:       0
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        0
+fileSize: 32
+
+fileNumber: 02
+fileType: 0 (Standard)
+communicationSettings: 03 (Encrypted)
+accessRights RW | CAR: 12
+accessRights R  | W:   34
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        3
+accessRights W:        4
+fileSize: 256
+
+fileNumber: 03
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 12
+accessRights R  | W:   E4
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        14
+accessRights W:        4
+fileSize: 128
+ */
+/*
+original/fabric:
+
+fileNumber: 01
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 00
+accessRights R  | W:   E0
+accessRights RW:       0
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        0
+fileSize: 32
+
+fileNumber: 02
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: E0
+accessRights R  | W:   EE
+accessRights RW:       14
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        14
+fileSize: 256
+
+fileNumber: 03
+fileType: 0 (Standard)
+communicationSettings: 03 (Encrypted)
+accessRights RW | CAR: 30
+accessRights R  | W:   23
+accessRights RW:       3
+accessRights CAR:      0
+accessRights R:        2
+accessRights W:        3
+fileSize: 128
+ */
+
+        // new version
+        // step 3 change the CommunicationMode of file 02 from Full to Plain
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 03: change the CommunicationMode of file 02 from Full to Plain");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, Ntag424DnaMethods.CommunicationSettings.Plain, 14, 0, 14, 14, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the CommunicationMode of file 02 from Full to Plain was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the CommunicationMode of file 02 from Full to Plain, aborted");
+            //todo return false;
+        }
+
+        // step 3 change the CommunicationMode of file 03 from Plain to Full
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 03: change the CommunicationMode of file 03 from Plain to Full");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, Ntag424DnaMethods.CommunicationSettings.Full, 1, 2, 3, 4, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the CommunicationMode of file 03 from Plain to Full was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the CommunicationMode of file 03 from Plain to Full, aborted");
+            // todo return false;
+        }
+
+/*
+        // old version
+        // step 3 change the CommunicationMode of file 02 from Plain to Full
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 03: change the CommunicationMode of file 02 from Plain to Full");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, Ntag424DnaMethods.CommunicationSettings.Full, 1, 2, 3, 4, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the CommunicationMode of file 02 from Plain to Full was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the CommunicationMode of file 02 from Plain to Full, aborted");
+            //todo return false;
+        }
+
+        // step 3 change the CommunicationMode of file 03 from Full to Plain
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 03: change the CommunicationMode of file 03 from Full to Plain");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, Ntag424DnaMethods.CommunicationSettings.Plain, 1, 2, 14, 4, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the CommunicationMode of file 03 from Full to Plain was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the CommunicationMode of file 03 from Full to Plain, aborted");
+            // todo return false;
+        }
+*/
         // step 2 write the NDEF template to the file 02
 
         // step  authenticate with key 00 (read & write key)
@@ -343,8 +461,6 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             // todo return false;
         }
 
-        /*
-
         // step  authenticate with key 01 (read & write key)
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
@@ -355,6 +471,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
             return false;
         }
+
 
         // step 3 write the personal data (cardholder name and cardId) to file 02
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -397,17 +514,314 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
+        // step 4 write the Virtual Value File to the file 02
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write the Value File to the file 02");
+        int offsetVvf = 32;
+        VirtualValueFile vvf = new VirtualValueFile((byte) 0x04, applicationKey4);
+        byte[] exportedVvf = vvf.exportVvf();
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length);
+        // success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Value File, aborted");
+            return false;
+        }
+
+        // step 5 write the Virtual Cyclic Records File to the file 02
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write the Cyclic Records File to the file 02");
+        int offsetVcrf = 80;
+        byte numberOfRecords = (byte) 0x08;
+        VirtualCyclicRecordFile vcrf = new VirtualCyclicRecordFile((byte) 0x05, numberOfRecords, applicationKey4);
+        byte[] exportedVcrf = vcrf.exportVcrf();
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length);
+        //success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Cyclic Records File, aborted");
+            return false;
+        }
+
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: read all file settings");
+        FileSettings[] allFileSettings = ntag424DnaMethods.getAllFileSettings();
+        FileSettings fs01 = allFileSettings[0];
+        writeToUiAppend(resultNfcWriting, fs01.dump());
+        FileSettings fs02 = allFileSettings[1];
+        writeToUiAppend(resultNfcWriting, fs02.dump());
+        FileSettings fs03 = allFileSettings[2];
+        writeToUiAppend(resultNfcWriting, fs03.dump());
+
+        // step  authenticate with key 01 (read & write key)
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            return false;
+        }
+
+        // read content file 02
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: read the content of file 02");
+        byte[] contentCard = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 0, 32);
+        byte[] contentValue = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 32, 48);
+        byte[] contentCyclic1 = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 80, 112);
+        byte[] contentCyclic2 = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, 192, 64);
+        byte[] contentCyclic = new byte[contentCyclic1.length + contentCyclic2.length];
+        System.arraycopy(contentCyclic1, 0, contentCyclic, 0, contentCyclic1.length);
+        System.arraycopy(contentCyclic2, 0, contentCyclic, contentCyclic1.length, contentCyclic2.length);
+
+        if (contentCard != null) {
+            writeToUiAppend(resultNfcWriting, printData("content cardData file 02\n", contentCard));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 02, aborted");
+            return false;
+        }
+        if (contentValue != null) {
+            writeToUiAppend(resultNfcWriting, printData("content valueFile file 02\n", contentValue));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 02, aborted");
+            return false;
+        }
+        if (contentCyclic != null) {
+            writeToUiAppend(resultNfcWriting, printData("content CyclicFile file 02\n", contentCyclic));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 02, aborted");
+            return false;
+        }
+
+        /*
+        // write to file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write content to file 03");
+        byte[] content03 = "Some content for file 03".getBytes(StandardCharsets.UTF_8);
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, content03, 0, content03.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "write content to file 03 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in writing content to file 03, aborted");
+            return false;
+        }
 */
 
-
-        // step  authenticate with key 03 (read & write key)
+        // step  authenticate with key 01 (read & write key)
         writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 3");
-        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber3, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
         if (success) {
-            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 3 was SUCCESSFUL");
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
         } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 3, aborted");
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            return false;
+        }
+
+        // read content from file 03
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: read content of file 03");
+        byte[] content03Read = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, 0, 128);
+        if (content03Read != null) {
+            writeToUiAppend(resultNfcWriting, printData("content file 03\n", content03Read));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 03, aborted");
+            return false;
+        }
+
+        // run a credit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a credit transaction");
+        vvf = new VirtualValueFile(contentValue);
+        vcrf = new VirtualCyclicRecordFile(contentCyclic);
+        // run a credit/charge transaction
+        //TransactionRecord(String timestampShort, String amPmMarker, String creditDebitMarker, String bookingUnits, byte machineNumber, byte goodType) {
+        String timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        String amPmMarker = "P";
+        String creditDebitMarker = "C";
+        String bookingUnits = "010000";
+        byte machineNumber = (byte) 0x01;
+        byte goodType = (byte) 0x00;
+        TransactionRecord tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vvf.credit(applicationKey4, Integer.parseInt(bookingUnits));
+        vcrf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVvf = vvf.exportVvf();
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Value File, aborted");
+            return false;
+        }
+        exportedVcrf = vcrf.exportVcrf();
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Cyclic Records File, aborted");
+            return false;
+        }
+
+        // run a debit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
+        timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        amPmMarker = "A";
+        creditDebitMarker = "D";
+        bookingUnits = "000340";
+        machineNumber = (byte) 0x09;
+        goodType = (byte) 0x01;
+        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vvf.debit(Integer.parseInt(bookingUnits));
+        vcrf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVvf = vvf.exportVvf();
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Value File, aborted");
+            return false;
+        }
+        exportedVcrf = vcrf.exportVcrf();
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Cyclic Records File, aborted");
+            return false;
+        }
+
+        // run a second debit transaction
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
+        timestampShort = Utils.getTimestampShort();
+        Log.d(TAG, "timestampShort: " + timestampShort);
+        amPmMarker = "A";
+        creditDebitMarker = "D";
+        bookingUnits = "000250";
+        machineNumber = (byte) 0x11;
+        goodType = (byte) 0x15;
+        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        if (!tr.isRecordValid()) {
+            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
+            return false;
+        }
+        vvf.debit(Integer.parseInt(bookingUnits));
+        vcrf.addRecord(applicationKey4, tr.getRecord());
+        // write data back to files
+        exportedVvf = vvf.exportVvf();
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVvf, offsetVvf, exportedVvf.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Value File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Value File, aborted");
+            return false;
+        }
+        exportedVcrf = vcrf.exportVcrf();
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, exportedVcrf, offsetVcrf, exportedVcrf.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "save the Cyclic Records File was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Cyclic Records File, aborted");
+            return false;
+        }
+
+        writeToUiAppend(resultNfcWriting, "remaining balance on tag: " + vvf.getBalance());
+
+        // show transactions
+        List<byte[]> transactionRecordsByte= vcrf.getRecordList();
+        List<TransactionRecord> transactionRecordList = new ArrayList<>();
+        // fill the list of transactionRecords
+        for (int i = 0; i < transactionRecordsByte.size(); i++) {
+            TransactionRecord trList = new TransactionRecord(transactionRecordsByte.get(i));
+            if (trList.isRecordValid()) {
+                Log.d(TAG, "add record " + i);
+                transactionRecordList.add(trList);
+            }
+        }
+        // now get the data for transactionModel
+        transactionModelArrayList = new ArrayList<>();
+        for (int i = 0; i < transactionRecordList.size(); i++) {
+            TransactionRecord trSingle = transactionRecordList.get(i);
+            LookupTable lt = new LookupTable(trSingle);
+            TransactionModel trModel = new TransactionModel(
+                    lt.getTransactionTimestamp(),
+                    // todo lookups for data
+                    lt.formatBookingUnits(),
+                    lt.formatCreditDebitMarker(),
+                    lt.formatMachineNumber(),
+                    lt.formatGoodType()
+            );
+            transactionModelArrayList.add(trModel);
+        }
+
+        transactionRVAdapter = new TransactionRVAdapter(transactionModelArrayList, getContext());
+        final int balance = vvf.getBalance();
+        getActivity().runOnUiThread(() -> {
+            // setting layout manager for our recycler view.
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
+            transactionRV.setLayoutManager(linearLayoutManager);
+            // setting our adapter to recycler view.
+            transactionRV.setAdapter(transactionRVAdapter);
+            remainingDeposit.setText(Utils.convertIntegerInFloatString(balance));
+        });
+
+        writeToUiAppend(resultNfcWriting, "Number of recorded transactions: " + transactionModelArrayList.size());
+
+        // read content from file 01
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: read content of file 01");
+        byte[] content01Read = ntag424DnaMethods.readStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_01, 0, 32);
+        if (content01Read != null) {
+            writeToUiAppend(resultNfcWriting, printData("content file 01\n", content01Read));
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 01, aborted");
+            return false;
+        }
+
+        // create a NDEF message
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: create a NDEF message");
+        NdefRecord ndefRecord = NdefRecord.createTextRecord("en","English String Balance: 97,40");
+        NdefMessage ndefMessage = new NdefMessage(ndefRecord);
+        byte[] ndefMessageByte = ndefMessage.toByteArray();
+        writeToUiAppend(resultNfcWriting, printData("ndefMessage", ndefMessageByte));
+
+        // step  authenticate with key 01 (read & write key)
+        Log.d(TAG, "Authenticate with default key 1");
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
+            return false;
+        }
+
+        // write NDEF message to file 02
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write NDEF message to file 02");
+        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessageByte, 0, ndefMessageByte.length);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "write NDEF message to file 02 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 02, aborted");
             return false;
         }
 
@@ -427,43 +841,18 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             //return false;
         }
 
-
-        // this is for testing a transaction workflow
-        // read the virtual file
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: testing the transaction workflow");
-
-
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: read the virtual file from file 03");
-        byte[] contentFile03 = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, 0, 128);
-        if ((contentFile03 == null) || (contentFile03.length != 128)) {
-            // error when reading the file
-            writeToUiAppend(resultNfcWriting, "FAILURE in reading the Virtual File, aborted");
-            return false;
-        } else {
-            writeToUiAppend(resultNfcWriting, "SUCCESS in reading the Virtual File");
-        }
-
-        // build the virtual file
-        vf = new VirtualFile(contentFile03, true);
-        if (!vf.isVirtualFileValid()) {
-            writeToUiAppend(resultNfcWriting, "The Virtual File is INVALID, aborted");
-            return false;
-        }
-
         // run a credit transaction
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: run a credit transaction");
         // run a credit/charge transaction
-        String timestampShort = Utils.getTimestampShort();
+        timestampShort = Utils.getTimestampShort();
         Log.d(TAG, "timestampShort: " + timestampShort);
-        String amPmMarker = "P";
-        String creditDebitMarker = "C";
-        String bookingUnits = "010000";
-        byte machineNumber = (byte) 0x01;
-        byte goodType = (byte) 0x00;
-        TransactionRecord tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        amPmMarker = "P";
+        creditDebitMarker = "C";
+        bookingUnits = "010000";
+        machineNumber = (byte) 0x01;
+        goodType = (byte) 0x00;
+        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;
@@ -522,7 +911,14 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;
         }
-
+        // testing the Virtual File import constructor
+        VirtualFile vf2 = new VirtualFile(exportedVf, true);
+        if (vf2.isVirtualFileValid()) {
+            // proceed
+        } else {
+            writeToUiAppend(resultNfcWriting, "The Virtual File 2 is not valid, aborted");
+            return false;
+        }
         vf.debit(Integer.parseInt(bookingUnits));
         vf.addRecord(applicationKey4, tr.getRecord());
         // write data back to files
@@ -532,147 +928,8 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
         } else {
             writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
-            return false;
+            //return false;
         }
-
-        // show transactions
-        List<byte[]> transactionRecordsByte= vf.getRecordList();
-        List<TransactionRecord> transactionRecordList = new ArrayList<>();
-        // fill the list of transactionRecords
-        for (int i = 0; i < transactionRecordsByte.size(); i++) {
-            TransactionRecord trList = new TransactionRecord(transactionRecordsByte.get(i));
-            if (trList.isRecordValid()) {
-                Log.d(TAG, "add record " + i);
-                transactionRecordList.add(trList);
-            }
-        }
-        // now get the data for transactionModel
-        transactionModelArrayList = new ArrayList<>();
-        for (int i = 0; i < transactionRecordList.size(); i++) {
-            TransactionRecord trSingle = transactionRecordList.get(i);
-            LookupTable lt = new LookupTable(trSingle);
-            TransactionModel trModel = new TransactionModel(
-                    lt.getTransactionTimestamp(),
-                    // todo lookups for data
-                    lt.formatBookingUnits(),
-                    lt.formatCreditDebitMarker(),
-                    lt.formatMachineNumber(),
-                    lt.formatGoodType()
-            );
-            transactionModelArrayList.add(trModel);
-        }
-
-        transactionRVAdapter = new TransactionRVAdapter(transactionModelArrayList, getContext());
-        final int balance = vf.getBalance();
-        getActivity().runOnUiThread(() -> {
-            // setting layout manager for our recycler view.
-            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
-            transactionRV.setLayoutManager(linearLayoutManager);
-            // setting our adapter to recycler view.
-            transactionRV.setAdapter(transactionRVAdapter);
-            remainingDeposit.setText(Utils.convertIntegerInFloatString(balance));
-        });
-
-        writeToUiAppend(resultNfcWriting, "Number of recorded transactions: " + transactionModelArrayList.size());
-
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: workflow for writing the NDEF message");
-
-        // todo authenticate later, at this time the file is not write secured
-
-        // create a NDEF message
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: create a NDEF message");
-        StringBuilder sb = new StringBuilder();
-        sb.append("remaining balance on the tag: ");
-        sb.append(Utils.convertIntegerInFloatString(vf.getBalance()));
-        sb.append("\n");
-        sb.append("last transaction: ");
-        TransactionRecord trLast = new TransactionRecord(vf.showLastRecord());
-        LookupTable lut = new LookupTable(trLast);
-        sb.append(lut.getTransactionTimestamp());
-        sb.append("\n");
-        sb.append("credit/debit: ").append(lut.formatCreditDebitMarker()).append("\n");
-        sb.append("booking: ").append(lut.formatBookingUnits()).append("\n");
-        sb.append("machine: ").append(lut.formatMachineNumber()).append("\n");
-        sb.append("good: ").append(lut.formatGoodType()).append("\n");
-        String record = sb.toString();
-
-        NdefRecord ndefRecord = NdefRecord.createTextRecord("en", record);
-        NdefMessage ndefMessage = new NdefMessage(ndefRecord);
-
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: change tag technology from IsoDep to Ndef");
-        try {
-            IsoDep isoDep = IsoDep.get(discoveredTag);
-            isoDep.close();
-            Ndef ndef = Ndef.get(discoveredTag);
-            ndef.connect();
-            ndef.writeNdefMessage(ndefMessage);
-            writeToUiAppend(resultNfcWriting, "write NDEF message to file 02 was SUCCESSFUL");
-        } catch (IOException | FormatException e) {
-            //throw new RuntimeException(e);
-            writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 02, aborted " + e.getMessage());
-            return false;
-        }
-
-
-
-/*
-        // step  authenticate with key 01 (read & write key)
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
-        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
-            return false;
-        }
-
-        // read content from file 03
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: read content of file 03");
-        byte[] content03Read = ntag424DnaMethods.readStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, 0, 128);
-        if (content03Read != null) {
-            writeToUiAppend(resultNfcWriting, printData("content file 03\n", content03Read));
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in reading the content of file 03, aborted");
-            return false;
-        }
-
-        // create a NDEF message
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: create a NDEF message");
-        NdefRecord ndefRecord = NdefRecord.createTextRecord("en","English String Balance: 97,40");
-        NdefMessage ndefMessage = new NdefMessage(ndefRecord);
-        byte[] ndefMessageByte = ndefMessage.toByteArray();
-        writeToUiAppend(resultNfcWriting, printData("ndefMessage", ndefMessageByte));
-
-        // step  authenticate with key 01 (read & write key)
-        Log.d(TAG, "Authenticate with default key 1");
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
-        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
-            return false;
-        }
-
-        // write NDEF message to file 02
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: write NDEF message to file 02");
-        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessageByte, 0, ndefMessageByte.length);
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "write NDEF message to file 02 was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 02, aborted");
-            return false;
-        }
-
-
 
         // write the balance in a NDEF file 02
         // create a NDEF message
@@ -692,7 +949,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         sb.append("machine: ").append(lut.formatMachineNumber()).append("\n");
         sb.append("good: ").append(lut.formatGoodType()).append("\n");
         String record = sb.toString();
-*/
+
         /*
         // using ndef tools
         MimeRecord mimeRecord = new MimeRecord();
@@ -705,13 +962,13 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         writeToUiAppend(resultNfcWriting, printData("ndefMessage2", ndefMessage2Bytes));
 
          */
-/*
+
         ndefRecord = NdefRecord.createTextRecord("en",record);
         //ndefRecord = NdefRecord.createTextRecord("en","English String Balance: 97,40");
         ndefMessage = new NdefMessage(ndefRecord);
         ndefMessageByte = ndefMessage.toByteArray();
         writeToUiAppend(resultNfcWriting, printData("ndefMessage", ndefMessageByte));
-*/
+
         /*
         // build the ndef header, maximum length is 255
         byte[] ndefMessageFull = new byte[ndefMessageByte.length + 3];
@@ -720,7 +977,6 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         System.arraycopy(ndefMessageByte, 0, ndefMessageFull, 2, ndefMessageByte.length);
         ndefMessageFull[ndefMessageByte.length + 2] = (byte) 0x00; // not necessary
 */
-        /*
         // step  authenticate with key 01 (read & write key)
         Log.d(TAG, "Authenticate with default key 1");
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -737,10 +993,8 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: write NDEF message to file 02");
 
-*/
-
         // changing tag technology from IsoDep to Ndef
-        /*
+
         try {
             IsoDep isoDep = IsoDep.get(discoveredTag);
             isoDep.close();
@@ -753,7 +1007,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in writing NDEF message to file 02, aborted " + e.getMessage());
             return false;
         }
-*/
+
 /*
         //success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessageFull, 0, ndefMessageFull.length);
         success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, ndefMessage2Bytes, 0, ndefMessage2Bytes.length);
@@ -777,7 +1031,79 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         writeToUiAppend(resultNfcWriting, fs03N.dump());
 
  */
+/*
+modified:
 
+step 0x: read the file settings of all files
+fileNumber: 01
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 00
+accessRights R  | W:   E0
+accessRights RW:       0
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        0
+fileSize: 32
+
+fileNumber: 02
+fileType: 0 (Standard)
+communicationSettings: 03 (Encrypted)
+accessRights RW | CAR: 12
+accessRights R  | W:   34
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        3
+accessRights W:        4
+fileSize: 256
+
+fileNumber: 03
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 12
+accessRights R  | W:   E4
+accessRights RW:       1
+accessRights CAR:      2
+accessRights R:        14
+accessRights W:        4
+fileSize: 128
+ */
+/*
+original/fabric:
+
+fileNumber: 01
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: 00
+accessRights R  | W:   E0
+accessRights RW:       0
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        0
+fileSize: 32
+
+fileNumber: 02
+fileType: 0 (Standard)
+communicationSettings: 00 (Plain)
+accessRights RW | CAR: E0
+accessRights R  | W:   EE
+accessRights RW:       14
+accessRights CAR:      0
+accessRights R:        14
+accessRights W:        14
+fileSize: 256
+
+fileNumber: 03
+fileType: 0 (Standard)
+communicationSettings: 03 (Encrypted)
+accessRights RW | CAR: 30
+accessRights R  | W:   23
+accessRights RW:       3
+accessRights CAR:      0
+accessRights R:        2
+accessRights W:        3
+fileSize: 128
+ */
 
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");
         Log.d(TAG, "The tag was personalized with SUCCESS");
@@ -1028,11 +1354,11 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         ntag424DnaMethods = new Ntag424DnaMethods(resultNfcWriting, tag, getActivity());
 
         discoveredTag = tag;
-        boolean success = runCompletePersonalize();
+        //boolean success = runCompletePersonalize();
         //boolean success = runGetFabricSettings();
         //boolean success = runGetPersonalizedSettings();
         //boolean success = runResetToOriginalSettings();
-        //boolean success = runRestoreOriginalFileContent();
+        boolean success = runRestoreOriginalFileContent();
     }
 
     /**
