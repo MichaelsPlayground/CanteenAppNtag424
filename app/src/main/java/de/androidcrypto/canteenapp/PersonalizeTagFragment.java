@@ -29,8 +29,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.github.skjolber.ndef.Message;
-import com.github.skjolber.ndef.MimeRecord;
+
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -63,9 +62,6 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
     private ArrayList<TransactionModel> transactionModelArrayList;
     private TransactionRVAdapter transactionRVAdapter;
     private RecyclerView transactionRV;
-
-
-
 
     private final String lineSeparator = "---------------------";
     private PreferencesHandling preferencesHandling;
@@ -301,6 +297,31 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in selecting the application, aborted");
             return false;
         }
+
+        // change file settings of file 02, set r&w and w keys from E to 4
+
+        // step 2 authenticate with default key 0 = car
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 02: authenticate the application with default key 0");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber0, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 0 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 0, aborted");
+            return false;
+        }
+
+        // change file settings of file 02, set r&w and w keys from E to 4
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: change the file settings of file 02, set r&w and w keys from E to 4");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, Ntag424DnaMethods.CommunicationSettings.Plain, 4, 0, 14, 4, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the file settings of file 02, set r&w and w keys from E to 4 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the file settings of file 02, set r&w and w keys from E to 4, aborted");
+            //todo return false;
+        }
+
 
         // step 2 authenticate with default key
         writeToUiAppend(resultNfcWriting, lineSeparator);
@@ -580,6 +601,28 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
 
         // todo authenticate later, at this time the file is not write secured
 
+        // step 2 authenticate with default key 0 = car
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 02: authenticate the application with default key 0");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber0, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 0 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 0, aborted");
+            return false;
+        }
+
+        // change file settings of file 02, set r&w and w keys from E to 4
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: change the file settings of file 02, set r&w and w key from 4 to E");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, Ntag424DnaMethods.CommunicationSettings.Plain, 14, 0, 14, 14, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the file settings of file 02, set r&w and w keys from E to 4 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the file settings of file 02, set r&w and w keys from E to 4, aborted");
+            //todo return false;
+        }
+
         // create a NDEF message
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: create a NDEF message");
@@ -616,6 +659,41 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             return false;
         }
 
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: change tag technology back from Ndef to IsoDep");
+        try {
+            Ndef ndef = Ndef.get(discoveredTag);
+            ndef.close();
+            IsoDep isoDep = IsoDep.get(discoveredTag);
+            isoDep.connect();
+            writeToUiAppend(resultNfcWriting, "change tag technology back from Ndef to IsoDep was SUCCESSFUL");
+        } catch (IOException e) {
+            //throw new RuntimeException(e);
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing tag technology back from Ndef to IsoDep, aborted " + e.getMessage());
+            return false;
+        }
+
+        // step 2 authenticate with default key 0 = car
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 02: authenticate the application with default key 0");
+        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber0, defaultApplicationKey);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 0 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 0, aborted");
+            return false;
+        }
+
+        // change file settings of file 02, set r&w and w keys from E to 4
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: change the file settings of file 02, set r&w and w keys from E to 4");
+        success = ntag424DnaMethods.changeFileSettings(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, Ntag424DnaMethods.CommunicationSettings.Plain, 4, 0, 14, 4, false);
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "change the file settings of file 02, set r&w and w keys from E to 4 was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the file settings of file 02, set r&w and w keys from E to 4, aborted");
+            //todo return false;
+        }
 
 
 /*
