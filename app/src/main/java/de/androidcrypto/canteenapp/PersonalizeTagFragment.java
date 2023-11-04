@@ -353,13 +353,21 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         return true;
     }
 
-    private boolean createVirtualFileInFile03(){
+    private VirtualFile createVirtualFile(){
         boolean success;
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: use a Virtual File in file 03");
         VirtualFile vf = new VirtualFile(applicationKey4);
+        if (!vf.isVirtualFileValid()) return null;
+        return vf;
+    }
+
+    private boolean writeVirtualFileToFile03(VirtualFile vf){
+        boolean success;
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: write a Virtual File in file 03");
         byte[] exportedVf = vf.exportVirtualFile();
-        Log.d(TAG, printData("** exportedVf**", exportedVf));
+        if (exportedVf == null) return false;
         writeToUiAppend(resultNfcWriting, printData("exportedVirtualFile\n", exportedVf));
         success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVf.length, false);
         if (success) {
@@ -540,7 +548,9 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         if (!authenticate(Constants.applicationKeyNumber3, defaultApplicationKey)) return false;
 
         // create a Virtual File and write to file 03
-        if (!createVirtualFileInFile03()) return false;
+        VirtualFile vfCreated = createVirtualFile();
+        if (!vfCreated.isVirtualFileValid()) return false;
+        if (!writeVirtualFileToFile03(vfCreated)) return false;
 
         // this is for testing a transaction workflow
         // read the virtual file
@@ -562,76 +572,26 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         byte goodType = (byte) 0x00;
         if (!creditTransaction(vf, bookingUnits, machineNumber, goodType));
 
-
-        TransactionRecord tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
-        if (!tr.isRecordValid()) {
-            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
-            return false;
-        }
-        vf.credit(applicationKey4, Integer.parseInt(bookingUnits));
-        vf.addRecord(applicationKey4, tr.getRecord());
-        // write data back to files
-        exportedVf = vf.exportVirtualFile();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVf.length, false);
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
-            //return false;
-        }
-
         // run a debit transaction
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
-        timestampShort = Utils.getTimestampShort();
-        Log.d(TAG, "timestampShort: " + timestampShort);
         creditDebitMarker = "D";
         bookingUnits = "000340";
         machineNumber = (byte) 0x09;
         goodType = (byte) 0x01;
-        tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
-        if (!tr.isRecordValid()) {
-            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
-            return false;
-        }
-        vf.debit(Integer.parseInt(bookingUnits));
-        vf.addRecord(applicationKey4, tr.getRecord());
-        // write data back to files
-        exportedVf = vf.exportVirtualFile();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVf.length, false);
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
-            //return false;
-        }
+        if (!debitTransaction(vf, bookingUnits, machineNumber, goodType));
 
         // run a 2.nd debit transaction
         writeToUiAppend(resultNfcWriting, lineSeparator);
         writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
-        timestampShort = Utils.getTimestampShort();
-        Log.d(TAG, "timestampShort: " + timestampShort);
         creditDebitMarker = "D";
         bookingUnits = "000230";
         machineNumber = (byte) 0x17;
         goodType = (byte) 0x02;
-        tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
-        if (!tr.isRecordValid()) {
-            writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
-            return false;
-        }
+        if (!debitTransaction(vf, bookingUnits, machineNumber, goodType));
 
-        vf.debit(Integer.parseInt(bookingUnits));
-        vf.addRecord(applicationKey4, tr.getRecord());
         // write data back to files
-        exportedVf = vf.exportVirtualFile();
-        success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_03, exportedVf, 0, exportedVf.length, false);
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "save the Virtual File was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in saving the Virtual File, aborted");
-            return false;
-        }
+        if (!writeVirtualFileToFile03(vf)) return false;
 
         // show transactions
         List<byte[]> transactionRecordsByte= vf.getRecordList();
@@ -749,6 +709,8 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
             writeToUiAppend(resultNfcWriting, "FAILURE in changing tag technology back from Ndef to IsoDep, aborted " + e.getMessage());
             return false;
         }
+
+        if (!selectApplication()) return false;
 
         // step 2 authenticate with default key 0 = car
         writeToUiAppend(resultNfcWriting, lineSeparator);

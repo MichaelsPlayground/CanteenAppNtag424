@@ -275,7 +275,7 @@ public class PersonalizeTagFragment_V3 extends Fragment implements NfcAdapter.Re
      */
 
     private boolean selectApplication(){
-
+        return true;
     }
 
 
