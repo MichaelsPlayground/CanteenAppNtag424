@@ -641,12 +641,11 @@ fileSize: 128
         //TransactionRecord(String timestampShort, String amPmMarker, String creditDebitMarker, String bookingUnits, byte machineNumber, byte goodType) {
         String timestampShort = Utils.getTimestampShort();
         Log.d(TAG, "timestampShort: " + timestampShort);
-        String amPmMarker = "P";
         String creditDebitMarker = "C";
         String bookingUnits = "010000";
         byte machineNumber = (byte) 0x01;
         byte goodType = (byte) 0x00;
-        TransactionRecord tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        TransactionRecord tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;
@@ -676,12 +675,11 @@ fileSize: 128
         writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
         timestampShort = Utils.getTimestampShort();
         Log.d(TAG, "timestampShort: " + timestampShort);
-        amPmMarker = "A";
         creditDebitMarker = "D";
         bookingUnits = "000340";
         machineNumber = (byte) 0x09;
         goodType = (byte) 0x01;
-        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;
@@ -711,12 +709,11 @@ fileSize: 128
         writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
         timestampShort = Utils.getTimestampShort();
         Log.d(TAG, "timestampShort: " + timestampShort);
-        amPmMarker = "A";
         creditDebitMarker = "D";
         bookingUnits = "000250";
         machineNumber = (byte) 0x11;
         goodType = (byte) 0x15;
-        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;
@@ -847,12 +844,11 @@ fileSize: 128
         // run a credit/charge transaction
         timestampShort = Utils.getTimestampShort();
         Log.d(TAG, "timestampShort: " + timestampShort);
-        amPmMarker = "P";
         creditDebitMarker = "C";
         bookingUnits = "010000";
         machineNumber = (byte) 0x01;
         goodType = (byte) 0x00;
-        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;
@@ -874,12 +870,11 @@ fileSize: 128
         writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
         timestampShort = Utils.getTimestampShort();
         Log.d(TAG, "timestampShort: " + timestampShort);
-        amPmMarker = "A";
         creditDebitMarker = "D";
         bookingUnits = "000340";
         machineNumber = (byte) 0x09;
         goodType = (byte) 0x01;
-        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;
@@ -901,12 +896,11 @@ fileSize: 128
         writeToUiAppend(resultNfcWriting, "step 0x: run a debit transaction");
         timestampShort = Utils.getTimestampShort();
         Log.d(TAG, "timestampShort: " + timestampShort);
-        amPmMarker = "A";
         creditDebitMarker = "D";
         bookingUnits = "000230";
         machineNumber = (byte) 0x17;
         goodType = (byte) 0x02;
-        tr = new TransactionRecord(timestampShort, amPmMarker, creditDebitMarker, bookingUnits, machineNumber, goodType);
+        tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
             writeToUiAppend(resultNfcWriting, "Error: TransactionRecord is not valid, aborted");
             return false;

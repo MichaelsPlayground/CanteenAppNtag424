@@ -4,7 +4,6 @@ import android.text.TextUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -30,9 +29,10 @@ import java.util.Date;
  *
  */
 
-public class TransactionRecord {
+public class TransactionRecordOld {
 
     private String timestampShort; // e.g. 30092023153344 = Sep. 30th 2023 15:33:44
+    private String amPmMarker; // A for am or P for pm
     private String creditDebitMarker; // C for credit or D for debit
     private String bookingUnits; // 012345 for 123,45 with trailing 0
     private byte machineNumber; // e.g. (byte) 0x01
@@ -42,8 +42,9 @@ public class TransactionRecord {
     private Date transactionTimestamp;
     private boolean isRecordValid = false;
 
-    public TransactionRecord(String timestampShort, String creditDebitMarker, String bookingUnits, byte machineNumber, byte goodType) {
+    public TransactionRecordOld(String timestampShort, String amPmMarker, String creditDebitMarker, String bookingUnits, byte machineNumber, byte goodType) {
         this.timestampShort = timestampShort;
+        this.amPmMarker = amPmMarker;
         this.creditDebitMarker = creditDebitMarker;
         this.bookingUnits = bookingUnits;
         this.machineNumber = machineNumber;
@@ -66,6 +67,7 @@ public class TransactionRecord {
             return false;
         }
         //System.out.println("TS: " + transactionTimestamp);
+        if ((!amPmMarker.equals("A")) && (!amPmMarker.equals("P"))) return false;
         if ((!creditDebitMarker.equals("C")) && (!creditDebitMarker.equals("D"))) return false;
         // validate booking units, 1. char == 0
         if (!bookingUnits.startsWith("0")) return false;
@@ -78,7 +80,13 @@ public class TransactionRecord {
         // generates a 16 bytes long record
         StringBuilder sb = new StringBuilder();
         sb.append(timestampShort);
-        sb.append("00"); // reserved, former amPmMarker
+        sb.append("0");
+        String amPm = new SimpleDateFormat("aa").format(transactionTimestamp);
+        if (amPm.startsWith("A")) {
+            sb.append("A");
+        } else {
+            sb.append("F");
+        }
         sb.append("0");
         sb.append(creditDebitMarker);
         sb.append(bookingUnits);
@@ -90,7 +98,7 @@ public class TransactionRecord {
     }
 
 
-    public TransactionRecord(byte[] record) {
+    public TransactionRecordOld(byte[] record) {
         this.record = record;
         parseRecord();
         if (recordValidation()) {
@@ -105,9 +113,8 @@ public class TransactionRecord {
         // split data
         String recordString = Utils.bytesToHexNpeUpperCase(record);
         timestampShort = recordString.substring(0, 14);
-        // former amPmMarker
-        //amPmMarker = recordString.substring(15, 16);
-        //if (amPmMarker.equals("F")) amPmMarker = "P";
+        amPmMarker = recordString.substring(15, 16);
+        if (amPmMarker.equals("F")) amPmMarker = "P";
         creditDebitMarker = recordString.substring(17, 18);
         bookingUnits = recordString.substring(18, 24);
         machineNumber = Byte.parseByte(recordString.substring(24, 26));
@@ -121,6 +128,10 @@ public class TransactionRecord {
 
     public String getTimestampShort() {
         return timestampShort;
+    }
+
+    public String getAmPmMarker() {
+        return amPmMarker;
     }
 
     public String getCreditDebitMarker() {
