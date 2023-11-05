@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 public class Utils {
 
@@ -388,6 +389,11 @@ public class Utils {
             return "";
         }
         return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(timestamp);
+    }
+
+    public static int generateRandomIntInRange(int minimum, int maximum) {
+        if ((minimum >= maximum) || (maximum > 10000)) return 1;
+        return new Random().nextInt((maximum - minimum) + 1) + minimum;
     }
 
     public static byte[] generateTestData(int length) {
