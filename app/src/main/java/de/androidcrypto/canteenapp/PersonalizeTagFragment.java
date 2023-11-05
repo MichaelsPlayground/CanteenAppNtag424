@@ -583,6 +583,21 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         return vif;
     }
 
+    private boolean changeApplicationKey(byte keyNumber, byte[] keyNew, byte[] keyOld, byte keyVersionNew) {
+        boolean success;
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: change application key");
+        //success = ntag424DnaMethods.changeApplicationKey(keyNumber, keyNew, keyOld, keyVersionNew); // NTAG424Dna
+        success = ntag424DnaMethods.changeApplicationKeyFull(keyNumber, keyVersionNew, keyNew, keyOld); // Desfire
+        if (success) {
+            writeToUiAppend(resultNfcWriting, "changing the Application Key was SUCCESSFUL");
+        } else {
+            writeToUiAppend(resultNfcWriting, "FAILURE in changing the Application Key, aborted");
+            return false;
+        }
+        return true;
+    }
+
     private boolean runCompletePersonalize() {
         /*
         This are the steps that will run when a tag is tapped:
@@ -615,62 +630,6 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
 
         // step 1 write the changed NDEF compatibility container to the file 01
         if (!writeFile01ModifiedCompatibilityContainer()) return false;
-
-        /*
-
-        // step  authenticate with key 01 (read & write key)
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 0x: authenticate the application with default key 1");
-        success = ntag424DnaMethods.authenticateAesEv2First(Constants.applicationKeyNumber1, defaultApplicationKey);
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "authenticate the application with default key 1 was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in authenticate the application with default key 1, aborted");
-            return false;
-        }
-
-        // step 3 write the personal data (cardholder name and cardId) to file 02
-        writeToUiAppend(resultNfcWriting, lineSeparator);
-        writeToUiAppend(resultNfcWriting, "step 03: write the personal data (cardholder name and cardId) to the file 02");
-        String cardholderNameString = cardholderName.getText().toString();
-        if (TextUtils.isEmpty(cardholderNameString)) {
-            writeToUiAppend(resultNfcWriting, "please enter a cardholder's name");
-            return false;
-        }
-        String cardholderIdString = cardId.getText().toString();
-        if (TextUtils.isEmpty(cardholderIdString)) {
-            writeToUiAppend(resultNfcWriting, "please enter a cardId");
-            return false;
-        }
-
-        // the cardholderName is maximum 16 bytes long and written to file 01 @offset 00
-        byte[] cardholderNameFull = new byte[16];
-        int offsetCardholderName = 0;
-        System.arraycopy(cardholderNameString.getBytes(StandardCharsets.UTF_8), 0, cardholderNameFull, 0, cardholderIdString.getBytes(StandardCharsets.UTF_8).length);
-        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardholderNameFull, offsetCardholderName, cardholderNameFull.length);
-        // success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardholderNameFull, offsetCardholderName, cardholderNameFull.length, false);
-        //
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "save the cardholder name was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in saving the cardholder name, aborted");
-            return false;
-        }
-
-        // the cardId is maximum 16 bytes long and written to file 02 @offset 16
-        byte[] cardIdFull = new byte[16];
-        int offsetCardId = 16;
-        System.arraycopy(cardholderIdString.getBytes(StandardCharsets.UTF_8), 0, cardIdFull, 0, cardholderIdString.getBytes(StandardCharsets.UTF_8).length);
-        success = ntag424DnaMethods.writeStandardFilePlain(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardIdFull, offsetCardId, cardIdFull.length);
-        // success = ntag424DnaMethods.writeStandardFileFull(Ntag424DnaMethods.STANDARD_FILE_NUMBER_02, cardIdFull, offsetCardId, cardIdFull.length, false);
-        if (success) {
-            writeToUiAppend(resultNfcWriting, "save the cardId was SUCCESSFUL");
-        } else {
-            writeToUiAppend(resultNfcWriting, "FAILURE in saving the cardId, aborted");
-            return false;
-        }
-
-*/
 
         // step  authenticate with key 03 (read & write key)
         if (!authenticate(Constants.applicationKeyNumber3, defaultApplicationKey)) return false;
@@ -792,6 +751,68 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
 
         // change the file settings of file 02, set r&w and w key from E to 4
         if (!changeFile02SettingsWriteKey4()) return false;
+
+        // section for application key changing
+        writeToUiAppend(resultNfcWriting, lineSeparator);
+        writeToUiAppend(resultNfcWriting, "step 0x: section for application key changing");
+
+        // test for key 02
+        writeToUiAppend(resultNfcWriting, "step 0x: test authentication key02 with default application key");
+        success = authenticate(applicationKeyNumber2, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "test authentication key02 with default application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: authentication key0 with default application key");
+        success = authenticate(applicationKeyNumber0, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "test authentication key0 with default application key result: " + success);
+
+        // change key02 from default to individual key
+        byte keyVersion = (byte) 0x01;
+        writeToUiAppend(resultNfcWriting, "step 0x: change key02 from default to individual application key");
+        success = changeApplicationKey(applicationKeyNumber2, applicationKey2, defaultApplicationKey, keyVersion);
+        writeToUiAppend(resultNfcWriting, "change key02 from default to individual application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: test authentication key02 with default application key");
+        success = authenticate(applicationKeyNumber2, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "test authentication key02 with default application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: test authentication key02 with individual application key");
+        success = authenticate(applicationKeyNumber2, applicationKey2);
+        writeToUiAppend(resultNfcWriting, "test authentication key02 with individual application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: authentication key0 with default application key");
+        success = authenticate(applicationKeyNumber0, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "test authentication key0 with default application key result: " + success);
+
+        // change key02 from individual to default key
+        keyVersion = (byte) 0x02;
+        writeToUiAppend(resultNfcWriting, "step 0x: change key02 from individual to default application key");
+        success = changeApplicationKey(applicationKeyNumber2, defaultApplicationKey, applicationKey2, keyVersion);
+        writeToUiAppend(resultNfcWriting, "change key02 from individual to default application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: test authentication key02 with default application key");
+        success = authenticate(applicationKeyNumber2, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "test authentication key02 with default application key result: " + success);
+
+        // now test to change the application key 00
+        writeToUiAppend(resultNfcWriting, "step 0x: authentication key0 with default application key");
+        success = authenticate(applicationKeyNumber0, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "test authentication key0 with default application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: change key0 from default to individual application key");
+        success = changeApplicationKey(applicationKeyNumber0, applicationKey0, defaultApplicationKey, keyVersion);
+        writeToUiAppend(resultNfcWriting, "change key00 from default to individual application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: test authentication key0 with individual application key");
+        success = authenticate(applicationKeyNumber0, applicationKey0);
+        writeToUiAppend(resultNfcWriting, "test authentication key0 with individual application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: change key0 from individual to default application key");
+        success = changeApplicationKey(applicationKeyNumber0, defaultApplicationKey, applicationKey0, keyVersion);
+        writeToUiAppend(resultNfcWriting, "change key00 from default to individual application key result: " + success);
+
+        writeToUiAppend(resultNfcWriting, "step 0x: authentication key0 with default application key");
+        success = authenticate(applicationKeyNumber0, defaultApplicationKey);
+        writeToUiAppend(resultNfcWriting, "test authentication key0 with default application key result: " + success);
 
         writeToUiAppend(resultNfcWriting, "The tag was personalized with SUCCESS");
         Log.d(TAG, "The tag was personalized with SUCCESS");
