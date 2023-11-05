@@ -406,7 +406,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         writeToUiAppend(resultNfcWriting, "step 0x: run a credit transaction");
         // run a credit/charge transaction
         String timestampShort = Utils.getTimestampShort();
-        Log.d(TAG, "timestampShort: " + timestampShort);
+        //Log.d(TAG, "timestampShort: " + timestampShort);
         String creditDebitMarker = "C";
         TransactionRecord tr = new TransactionRecord(timestampShort, creditDebitMarker, bookingUnits, machineNumber, goodType);
         if (!tr.isRecordValid()) {
@@ -460,7 +460,7 @@ public class PersonalizeTagFragment extends Fragment implements NfcAdapter.Reade
         for (int i = 0; i < transactionRecordsByte.size(); i++) {
             TransactionRecord trList = new TransactionRecord(transactionRecordsByte.get(i));
             if (trList.isRecordValid()) {
-                Log.d(TAG, "add record " + i);
+                //Log.d(TAG, "add record " + i);
                 transactionRecordList.add(trList);
             }
         }

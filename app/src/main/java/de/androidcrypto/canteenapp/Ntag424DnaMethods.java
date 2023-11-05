@@ -248,9 +248,10 @@ public class Ntag424DnaMethods {
 
     private boolean selectNdefApplicationIso(byte[] dfApplicationName) {
         String logData = "";
+        final boolean debug = false;
         final String methodName = "selectNdefApplicationIso";
-        log(methodName, "started", true);
-        log(methodName, printData("dfApplicationName", dfApplicationName));
+        if (debug) log(methodName, "started", true);
+        if (debug) log(methodName, printData("dfApplicationName", dfApplicationName));
         if (!isTagNtag424Dna) {
             errorCode = RESPONSE_FAILURE.clone();
             errorCodeReason = "discovered tag is not a NTAG424DNA tag, aborted";
@@ -278,7 +279,7 @@ public class Ntag424DnaMethods {
         byte[] apdu = baos.toByteArray();
         byte[] response = sendData(apdu);
         if (checkResponseIso(response)) {
-            log(methodName, methodName + " SUCCESS");
+            if (debug) log(methodName, methodName + " SUCCESS");
             errorCode = RESPONSE_OK.clone();
             errorCodeReason = methodName + " SUCCESS";
             isApplicationSelected = true;
@@ -400,9 +401,10 @@ public class Ntag424DnaMethods {
         // status: WORKING on enabling and disabling SDM feature
 
         String logData = "";
+        final boolean debug = false;
         final String methodName = "changeFileSettings";
-        log(methodName, "started", true);
-        log(methodName, "fileNumber: " + fileNumber);
+        if (debug) log(methodName, "started", true);
+        if (debug) log(methodName, "fileNumber: " + fileNumber);
         // sanity checks
         errorCode = new byte[2];
         // sanity checks
@@ -504,8 +506,8 @@ fileSize: 128
         // IV_Input (IV_Label || TI || CmdCounter || Padding)
         // Generating the MAC for the Command APDU
         byte[] commandCounterLsb = intTo2ByteArrayInversed(CmdCounter);
-        log(methodName, "CmdCounter: " + CmdCounter);
-        log(methodName, printData("commandCounterLsb", commandCounterLsb));
+        if (debug) log(methodName, "CmdCounter: " + CmdCounter);
+        if (debug) log(methodName, printData("commandCounterLsb", commandCounterLsb));
         byte[] padding1 = hexStringToByteArray("0000000000000000"); // 8 bytes
         ByteArrayOutputStream baosIvInput = new ByteArrayOutputStream();
         baosIvInput.write(HEADER_MAC, 0, HEADER_MAC.length);
@@ -513,13 +515,13 @@ fileSize: 128
         baosIvInput.write(commandCounterLsb, 0, commandCounterLsb.length);
         baosIvInput.write(padding1, 0, padding1.length);
         byte[] ivInput = baosIvInput.toByteArray();
-        log(methodName, printData("ivInput", ivInput));
+        if (debug) log(methodName, printData("ivInput", ivInput));
 
         // IV for CmdData = Enc(KSesAuthENC, IV_Input)
-        log(methodName, printData("SesAuthENCKey", SesAuthENCKey));
+        if (debug) log(methodName, printData("SesAuthENCKey", SesAuthENCKey));
         byte[] startingIv = new byte[16];
         byte[] ivForCmdData = AES.encrypt(startingIv, SesAuthENCKey, ivInput);
-        log(methodName, printData("ivForCmdData", ivForCmdData));
+        if (debug) log(methodName, printData("ivForCmdData", ivForCmdData));
 
         // build the command data
         byte communicationSettingsByte = (byte) 0x00;
@@ -552,7 +554,7 @@ fileSize: 128
             baosCommandData.write(SDMMACInputOffset, 0, SDMMACInputOffset.length);
         }
         byte[] commandData = baosCommandData.toByteArray();
-        log(methodName, printData("commandData", commandData));
+        if (debug) log(methodName, printData("commandData", commandData));
 
         /*
 from: NTAG 424 DNA and NTAG 424 DNA TagTamper features and hints AN12196.pdf page 34
@@ -575,11 +577,11 @@ F121h = SDMAccessRights (RFU: 0xF, FileAR.SDMCtrRet = 0x1, FileAR.SDMMetaRead: 0
 
         // eventually some padding is necessary with 0x80..00
         byte[] commandDataPadded = paddingWriteData(commandData);
-        log(methodName, printData("commandDataPadded", commandDataPadded));
+        if (debug) log(methodName, printData("commandDataPadded", commandDataPadded));
 
         // E(KSesAuthENC, IVc, CmdData || Padding (if necessary))
         byte[] encryptedData = AES.encrypt(ivForCmdData, SesAuthENCKey, commandDataPadded);
-        log(methodName, printData("encryptedData", encryptedData));
+        if (debug) log(methodName, printData("encryptedData", encryptedData));
 
         // Generating the MAC for the Command APDU
         // Cmd || CmdCounter || TI || CmdHeader = fileNumber || E(KSesAuthENC, CmdData)
@@ -590,15 +592,15 @@ F121h = SDMAccessRights (RFU: 0xF, FileAR.SDMCtrRet = 0x1, FileAR.SDMMetaRead: 0
         baosMacInput.write(fileNumber);
         baosMacInput.write(encryptedData, 0, encryptedData.length);
         byte[] macInput = baosMacInput.toByteArray();
-        log(methodName, printData("macInput", macInput));
+        if (debug) log(methodName, printData("macInput", macInput));
 
         // generate the MAC (CMAC) with the SesAuthMACKey
-        log(methodName, printData("SesAuthMACKey", SesAuthMACKey));
+        if (debug) log(methodName, printData("SesAuthMACKey", SesAuthMACKey));
         byte[] macFull = calculateDiverseKey(SesAuthMACKey, macInput);
-        log(methodName, printData("macFull", macFull));
+        if (debug) log(methodName, printData("macFull", macFull));
         // now truncate the MAC
         byte[] macTruncated = truncateMAC(macFull);
-        log(methodName, printData("macTruncated", macTruncated));
+        if (debug) log(methodName, printData("macTruncated", macTruncated));
 
         // error in DESFire Light Features and Hints, page 57, point 28:
         // Data (FileNo || Offset || DataLength || Data) is NOT correct, as well not the Data Message
@@ -610,7 +612,7 @@ F121h = SDMAccessRights (RFU: 0xF, FileAR.SDMCtrRet = 0x1, FileAR.SDMMetaRead: 0
         baosWriteDataCommand.write(encryptedData, 0, encryptedData.length);
         baosWriteDataCommand.write(macTruncated, 0, macTruncated.length);
         byte[] writeDataCommand = baosWriteDataCommand.toByteArray();
-        log(methodName, printData("writeDataCommand", writeDataCommand));
+        if (debug) log(methodName, printData("writeDataCommand", writeDataCommand));
 
         byte[] response = new byte[0];
         byte[] apdu = new byte[0];
@@ -640,12 +642,12 @@ PERMISSION_DENIED
         }
         // note: after sending data to the card the commandCounter is increased by 1
         CmdCounter++;
-        log(methodName, "the CmdCounter is increased by 1 to " + CmdCounter);
+        if (debug) log(methodName, "the CmdCounter is increased by 1 to " + CmdCounter);
 
         responseMACTruncatedReceived = Arrays.copyOf(response, response.length - 2);
 
         if (verifyResponseMac(responseMACTruncatedReceived, null)) {
-            log(methodName, methodName + " SUCCESS");
+            if (debug) log(methodName, methodName + " SUCCESS");
             errorCode = RESPONSE_OK.clone();
             errorCodeReason = methodName + " SUCCESS";
             return true;
@@ -1409,14 +1411,14 @@ PERMISSION_DENIED
         logData = "";
         invalidateAllData();
         final String methodName = "authenticateAesEv2First";
-        log(methodName, printData("key", key) + " keyNumber: " + keyNumber, true);
+        if (debug) log(methodName, printData("key", key) + " keyNumber: " + keyNumber, true);
         errorCode = new byte[2];
         // sanity checks
         if (!checkKeyNumber(keyNumber)) return false;
         if (!checkKey(key)) return false;
         if (!checkIsoDep()) return false;
         if (debug) log(methodName, "step 01 get encrypted rndB from card");
-        log(methodName, "This method is using the AUTHENTICATE_AES_EV2_FIRST_COMMAND so it will work with AES-based application only");
+        if (debug) log(methodName, "This method is using the AUTHENTICATE_AES_EV2_FIRST_COMMAND so it will work with AES-based application only");
         // authenticate 1st part
         byte[] apdu;
         byte[] response = new byte[0];
@@ -1801,8 +1803,8 @@ PERMISSION_DENIED
     public byte[] readStandardFilePlain(byte fileNumber, int offset, int length) {
         String logData = "";
         final String methodName = "readStandardFilePlain";
-        log(methodName, "started", true);
-        log(methodName, "fileNumber: " + fileNumber + " offset: " + offset + " length: " + length);
+        //log(methodName, "started", true);
+        //log(methodName, "fileNumber: " + fileNumber + " offset: " + offset + " length: " + length);
         // sanity checks
         if ((fileNumber < 1) || (fileNumber > 3)) {
             errorCode = RESPONSE_PARAMETER_ERROR.clone();
@@ -1830,10 +1832,10 @@ PERMISSION_DENIED
         byte[] response;
         try {
             apdu = wrapMessage(READ_STANDARD_FILE_COMMAND, parameter);
-            log(methodName, printData("apdu", apdu));
+            //log(methodName, printData("apdu", apdu));
             //response = communicationAdapter.sendReceiveChain(apdu);
             response = sendData(apdu);
-            log(methodName, printData("response", response));
+            //log(methodName, printData("response", response));
         } catch (IOException e) {
             Log.e(TAG, methodName + " transceive failed, IOException:\n" + e.getMessage());
             log(methodName, "transceive failed: " + e.getMessage(), false);
@@ -1852,7 +1854,7 @@ PERMISSION_DENIED
         }
          */
         if (checkResponse(response)) {
-            Log.d(TAG, methodName + " SUCCESS");
+            //Log.d(TAG, methodName + " SUCCESS");
             return getData(response);
         } else {
             Log.d(TAG, methodName + " FAILURE with error code " + Utils.bytesToHexNpeUpperCase(responseBytes));
@@ -1869,9 +1871,10 @@ PERMISSION_DENIED
         // status
 
         String logData = "";
+        final boolean debug = false;
         final String methodName = "readStandardFileFull";
-        log(methodName, "started", true);
-        log(methodName, "fileNumber: " + fileNumber + " offset: " + offset + " length: " + length);
+        if (debug) log(methodName, "started", true);
+        if (debug) log(methodName, "fileNumber: " + fileNumber + " offset: " + offset + " length: " + length);
         // sanity checks
         if ((fileNumber < 1) || (fileNumber > 3)) {
             errorCode = RESPONSE_PARAMETER_ERROR.clone();
@@ -1900,28 +1903,28 @@ PERMISSION_DENIED
         baosCmdHeader.write(offsetBytes, 0, 3);
         baosCmdHeader.write(lengthBytes, 0, 3);
         byte[] cmdHeader = baosCmdHeader.toByteArray();
-        log(methodName, printData("cmdHeader", cmdHeader));
+        if (debug) log(methodName, printData("cmdHeader", cmdHeader));
         // example: 00000000300000
 
         // MAC_Input
         byte[] commandCounterLsb1 = intTo2ByteArrayInversed(CmdCounter);
-        log(methodName, "CmdCounter: " + CmdCounter);
-        log(methodName, printData("commandCounterLsb1", commandCounterLsb1));
+        if (debug) log(methodName, "CmdCounter: " + CmdCounter);
+        if (debug) log(methodName, printData("commandCounterLsb1", commandCounterLsb1));
         ByteArrayOutputStream baosMacInput = new ByteArrayOutputStream();
         baosMacInput.write(READ_STANDARD_FILE_SECURE_COMMAND); // 0xAD
         baosMacInput.write(commandCounterLsb1, 0, commandCounterLsb1.length);
         baosMacInput.write(TransactionIdentifier, 0, TransactionIdentifier.length);
         baosMacInput.write(cmdHeader, 0, cmdHeader.length);
         byte[] macInput = baosMacInput.toByteArray();
-        log(methodName, printData("macInput", macInput));
+        if (debug) log(methodName, printData("macInput", macInput));
         // example: AD0100CD73D8E500000000300000
         // generate the MAC (CMAC) with the SesAuthMACKey
-        log(methodName, printData("SesAuthMACKey", SesAuthMACKey));
+        if (debug) log(methodName, printData("SesAuthMACKey", SesAuthMACKey));
         byte[] macFull = calculateDiverseKey(SesAuthMACKey, macInput);
-        log(methodName, printData("macFull", macFull));
+        if (debug) log(methodName, printData("macFull", macFull));
         // now truncate the MAC
         byte[] macTruncated = truncateMAC(macFull);
-        log(methodName, printData("macTruncated", macTruncated));
+        if (debug) log(methodName, printData("macTruncated", macTruncated));
         // example: 7CF94F122B3DB05F
 
         // Constructing the full ReadData Command APDU
@@ -1929,7 +1932,7 @@ PERMISSION_DENIED
         baosReadDataCommand.write(cmdHeader, 0, cmdHeader.length);
         baosReadDataCommand.write(macTruncated, 0, macTruncated.length);
         byte[] readDataCommand = baosReadDataCommand.toByteArray();
-        log(methodName, printData("readDataCommand", readDataCommand));
+        if (debug) log(methodName, printData("readDataCommand", readDataCommand));
         byte[] response = new byte[0];
         byte[] apdu = new byte[0];
         byte[] fullEncryptedData;
@@ -1937,10 +1940,10 @@ PERMISSION_DENIED
         byte[] responseMACTruncatedReceived;
         try {
             apdu = wrapMessage(READ_STANDARD_FILE_SECURE_COMMAND, readDataCommand);
-            log(methodName, printData("apdu", apdu));
+            if (debug) log(methodName, printData("apdu", apdu));
             //response = isoDep.transceive(apdu);
             response = sendData(apdu);
-            log(methodName, printData("response", response));
+            if (debug) log(methodName, printData("response", response));
             //Log.d(TAG, methodName + printData(" response", response));
         } catch (IOException e) {
             Log.e(TAG, methodName + " transceive failed, IOException:\n" + e.getMessage());
@@ -1951,7 +1954,7 @@ PERMISSION_DENIED
         byte[] responseBytes = returnStatusBytes(response);
         System.arraycopy(responseBytes, 0, errorCode, 0, 2);
         if (checkResponse(response)) {
-            Log.d(TAG, methodName + " SUCCESS, now decrypting the received data");
+            if (debug) Log.d(TAG, methodName + " SUCCESS, now decrypting the received data");
             fullEncryptedData = Arrays.copyOf(response, response.length - 2);
         } else {
             Log.d(TAG, methodName + " FAILURE with error code " + Utils.bytesToHexNpeUpperCase(responseBytes));
@@ -1960,16 +1963,16 @@ PERMISSION_DENIED
         }
         // note: after sending data to the card the commandCounter is increased by 1
         CmdCounter++;
-        log(methodName, "the CmdCounter is increased by 1 to " + CmdCounter);
+        if (debug) log(methodName, "the CmdCounter is increased by 1 to " + CmdCounter);
         // response length: 58 data: 8b61541d54f73901c8498c71dd45bae80578c4b1581aad439a806f37517c86ad4df8970279bbb8874ef279149aaa264c3e5eceb0e37a87699100
 
         // the fullEncryptedData is 56 bytes long, the first 48 bytes are encryptedData and the last 8 bytes are the responseMAC
         int encryptedDataLength = fullEncryptedData.length - 8;
-        log(methodName, "The fullEncryptedData is of length " + fullEncryptedData.length + " that includes 8 bytes for MAC");
-        log(methodName, "The encryptedData length is " + encryptedDataLength);
+        if (debug) log(methodName, "The fullEncryptedData is of length " + fullEncryptedData.length + " that includes 8 bytes for MAC");
+        if (debug) log(methodName, "The encryptedData length is " + encryptedDataLength);
         encryptedData = Arrays.copyOfRange(fullEncryptedData, 0, encryptedDataLength);
         responseMACTruncatedReceived = Arrays.copyOfRange(fullEncryptedData, encryptedDataLength, fullEncryptedData.length);
-        log(methodName, printData("encryptedData", encryptedData));
+        if (debug) log(methodName, printData("encryptedData", encryptedData));
 
         // start decrypting the data
         byte[] commandCounterLsb2 =
@@ -1982,14 +1985,14 @@ PERMISSION_DENIED
         decryptBaos.write(commandCounterLsb2, 0, commandCounterLsb2.length);
         decryptBaos.write(padding, 0, padding.length);
         byte[] ivInputResponse = decryptBaos.toByteArray();
-        log(methodName, printData("ivInputResponse", ivInputResponse));
+        if (debug) log(methodName, printData("ivInputResponse", ivInputResponse));
         byte[] ivResponse = AES.encrypt(startingIv, SesAuthENCKey, ivInputResponse);
-        log(methodName, printData("ivResponse", ivResponse));
+        if (debug) log(methodName, printData("ivResponse", ivResponse));
         byte[] decryptedData = AES.decrypt(ivResponse, SesAuthENCKey, encryptedData);
-        log(methodName, printData("decryptedData", decryptedData));
+        if (debug) log(methodName, printData("decryptedData", decryptedData));
         byte[] readData = Arrays.copyOfRange(decryptedData, 0, length); // todo: if length is 0 (meaning all data) this function returns 0
         // todo: read fileSize or known fileSize from data sheet (32/256/128)
-        log(methodName, printData("readData", readData));
+        if (debug) log(methodName, printData("readData", readData));
         // verifying the received MAC
         if (verifyResponseMac(responseMACTruncatedReceived, encryptedData)) {
             return readData;
@@ -2000,10 +2003,11 @@ PERMISSION_DENIED
 
     public boolean writeStandardFilePlain(byte fileNumber, byte[] dataToWrite, int offset, int length) {
         String logData = "";
+        final boolean debug = false;
         final String methodName = "writeStandardFilePlain";
-        log(methodName, "started", true);
-        log(methodName, "fileNumber: " + fileNumber);
-        log(methodName, printData("dataToWrite", dataToWrite));
+        if (debug) log(methodName, "started", true);
+        if (debug) log(methodName, "fileNumber: " + fileNumber);
+        if (debug) log(methodName, printData("dataToWrite", dataToWrite));
         
         // sanity checks
         if ((fileNumber < (byte) 0x01) || (fileNumber > (byte) 0x03)) {
@@ -2031,7 +2035,7 @@ PERMISSION_DENIED
         baos.write(lengthBytes, 0, lengthBytes.length);
         baos.write(dataToWrite, 0, dataToWrite.length);
         byte[] parameter = baos.toByteArray();
-        Log.d(TAG, methodName + printData(" parameter", parameter));
+        if (debug) Log.d(TAG, methodName + printData(" parameter", parameter));
         byte[] response = new byte[0];
         byte[] apdu = new byte[0];
         try {
@@ -2047,7 +2051,7 @@ PERMISSION_DENIED
         byte[] responseBytes = returnStatusBytes(response);
         System.arraycopy(responseBytes, 0, errorCode, 0, 2);
         if (checkResponse(response)) {
-            Log.d(TAG, methodName + " SUCCESS");
+            if (debug) Log.d(TAG, methodName + " SUCCESS");
             return true;
         } else {
             return false;
@@ -2089,10 +2093,11 @@ PERMISSION_DENIED
          */
 
         String logData = "";
+        final boolean debug = false;
         final String methodName = "writeStandardFileFull";
-        log(methodName, "started", true);
-        log(methodName, "fileNumber: " + fileNumber);
-        log(methodName, printData("dataToWrite", dataToWrite));
+        if (debug) log(methodName, "started", true);
+        if (debug) log(methodName, "fileNumber: " + fileNumber);
+        if (debug) log(methodName, printData("dataToWrite", dataToWrite));
         // variables for testMode
         byte[] cmdData_expected = Utils.hexStringToByteArray("0102030405060708090A");
         byte fileNumber_expected = (byte) 0x03;
@@ -2146,8 +2151,8 @@ PERMISSION_DENIED
         // IV_Input (IV_Label || TI || CmdCounter || Padding)
         // MAC_Input
         byte[] commandCounterLsb1 = intTo2ByteArrayInversed(CmdCounter);
-        log(methodName, "CmdCounter: " + CmdCounter);
-        log(methodName, printData("commandCounterLsb1", commandCounterLsb1));
+        if (debug) log(methodName, "CmdCounter: " + CmdCounter);
+        if (debug) log(methodName, printData("commandCounterLsb1", commandCounterLsb1));
         byte[] padding1 = hexStringToByteArray("0000000000000000"); // 8 bytes
         ByteArrayOutputStream baosIvInput = new ByteArrayOutputStream();
         baosIvInput.write(HEADER_MAC, 0, HEADER_MAC.length);
@@ -2155,7 +2160,7 @@ PERMISSION_DENIED
         baosIvInput.write(commandCounterLsb1, 0, commandCounterLsb1.length);
         baosIvInput.write(padding1, 0, padding1.length);
         byte[] ivForCommandInput = baosIvInput.toByteArray();
-        log(methodName, printData("ivForCommandInput", ivForCommandInput));
+        if (debug) log(methodName, printData("ivForCommandInput", ivForCommandInput));
         if (testMode) {
             boolean testResult = compareTestModeValues(ivForCommandInput, ivForCommandInput_expected, "ivInput");
             ivForCommandInput = ivForCommand_expected.clone();
@@ -2163,10 +2168,10 @@ PERMISSION_DENIED
 
         // step 8 b encrypt to get ivForCommand
         // IV for CmdData = Enc(KSesAuthENC, IV_Input)
-        log(methodName, printData("SesAuthENCKey", SesAuthENCKey));
+        if (debug) log(methodName, printData("SesAuthENCKey", SesAuthENCKey));
         byte[] startingIv = new byte[16];
         byte[] ivForCmdData = AES.encrypt(startingIv, SesAuthENCKey, ivForCommandInput);
-        log(methodName, printData("ivForCmdData", ivForCmdData));
+        if (debug) log(methodName, printData("ivForCmdData", ivForCmdData));
 
         if (testMode) {
             boolean testResult = compareTestModeValues(ivForCmdData, ivForCommand_expected, "ivForCommand");
@@ -2182,10 +2187,10 @@ PERMISSION_DENIED
         // step 10 encrypt cmdData after padding
         // next step is to pad the data according to padding rules in desfire EV2/3 for AES Secure Messaging fullMode
         byte[] dataPadded = paddingWriteData(cmdData);
-        log(methodName, printData("cmdData ", cmdData));
-        log(methodName, printData("data pad", dataPadded));
+        if (debug) log(methodName, printData("cmdData ", cmdData));
+        if (debug) log(methodName, printData("data pad", dataPadded));
         byte[] encryptedData = AES.encrypt(ivForCmdData, SesAuthENCKey, dataPadded);
-        log(methodName, printData("encryptedData", encryptedData));
+        if (debug) log(methodName, printData("encryptedData", encryptedData));
         // step 11
         if (testMode) {
             boolean testResult = compareTestModeValues(encryptedData, encryptedData_expected, "encryptedData");
@@ -2219,7 +2224,7 @@ PERMISSION_DENIED
         baosMacInput.write(cmdHeader, 0, cmdHeader.length);
         baosMacInput.write(encryptedData, 0, encryptedData.length);
         byte[] sendMacInput = baosMacInput.toByteArray();
-        log(methodName, printData("sendMacInput", sendMacInput));
+        if (debug) log(methodName, printData("sendMacInput", sendMacInput));
 
         if (testMode) {
             boolean testResult = compareTestModeValues(sendMacInput, macInput_expected, "sendMacInput");
@@ -2228,9 +2233,9 @@ PERMISSION_DENIED
 
         // step 13 encrypt macInput
         // generate the MAC (CMAC) with the SesAuthMACKey
-        log(methodName, printData("SesAuthMACKey", SesAuthMACKey));
+        if (debug) log(methodName, printData("SesAuthMACKey", SesAuthMACKey));
         byte[] macFull = calculateDiverseKey(SesAuthMACKey, sendMacInput);
-        log(methodName, printData("macFull", macFull));
+        if (debug) log(methodName, printData("macFull", macFull));
 
         if (testMode) {
             boolean testResult = compareTestModeValues(macFull, mac_expected, "macFull");
@@ -2239,7 +2244,7 @@ PERMISSION_DENIED
 
         // now truncate the MAC
         byte[] macTruncated = truncateMAC(macFull);
-        log(methodName, printData("macTruncated", macTruncated));
+        if (debug) log(methodName, printData("macTruncated", macTruncated));
 
         if (testMode) {
             boolean testResult = compareTestModeValues(macTruncated, macTruncated_expected, "macTruncated");
@@ -2256,21 +2261,21 @@ PERMISSION_DENIED
         baosWriteDataCommand.write(encryptedData, 0, encryptedData.length);
         baosWriteDataCommand.write(macTruncated, 0, macTruncated.length);
         byte[] writeDataCommand = baosWriteDataCommand.toByteArray();
-        log(methodName, printData("writeDataCommand", writeDataCommand));
+        if (debug) log(methodName, printData("writeDataCommand", writeDataCommand));
 
         byte[] response = new byte[0];
         byte[] apdu = new byte[0];
         byte[] responseMACTruncatedReceived;
         try {
             apdu = wrapMessage(WRITE_STANDARD_FILE_SECURE_COMMAND, writeDataCommand);
-            log(methodName, printData("apdu", apdu));
+            if (debug) log(methodName, printData("apdu", apdu));
             if (testMode) {
                 boolean testResult = compareTestModeValues(apdu, apdu_expected, "apdu");
                 response = response_expected.clone();
             } else {
                 response = sendData(apdu);
             }
-            log(methodName, printData("response", response));
+            if (debug) log(methodName, printData("response", response));
             //Log.d(TAG, methodName + printData(" response", response));
         } catch (IOException e) {
             Log.e(TAG, methodName + " transceive failed, IOException:\n" + e.getMessage());
@@ -2281,7 +2286,7 @@ PERMISSION_DENIED
         byte[] responseBytes = returnStatusBytes(response);
         System.arraycopy(responseBytes, 0, errorCode, 0, 2);
         if (checkResponse(response)) {
-            Log.d(TAG, methodName + " SUCCESS, now verifying the received MAC");
+            if (debug) Log.d(TAG, methodName + " SUCCESS, now verifying the received MAC");
         } else {
             Log.d(TAG, methodName + " FAILURE with error code " + Utils.bytesToHexNpeUpperCase(responseBytes));
             Log.d(TAG, methodName + " error code: " + EV3.getErrorCode(responseBytes));
@@ -2290,7 +2295,7 @@ PERMISSION_DENIED
 
         // note: after sending data to the card the commandCounter is increased by 1
         CmdCounter++;
-        log(methodName, "the CmdCounter is increased by 1 to " + CmdCounter);
+        if (debug) log(methodName, "the CmdCounter is increased by 1 to " + CmdCounter);
 
         responseMACTruncatedReceived = Arrays.copyOf(response, response.length - 2);
         // verifying the received Response MAC
@@ -2325,8 +2330,8 @@ PERMISSION_DENIED
         System.arraycopy(PADDING_FULL, 0, fullPaddedData, unpaddedDataLength, paddingBytesLength);
         // this is maybe too long, trunc to multiple of 16 bytes
         int mult16 = fullPaddedData.length / 16;
-        Log.d(TAG, "fullPaddedData.length: " + fullPaddedData.length);
-        Log.d(TAG, "mult16               : " + mult16);
+        //Log.d(TAG, "fullPaddedData.length: " + fullPaddedData.length);
+        //Log.d(TAG, "mult16               : " + mult16);
         return Arrays.copyOfRange(fullPaddedData, 0, (mult16 * 16));
     }
 
@@ -2360,7 +2365,7 @@ PERMISSION_DENIED
 
     public byte getKeyVersion(byte keyNumber) {
         final String methodName = "getKeyVersion";
-        log(methodName, "keyNumber: " + keyNumber, true);
+        //log(methodName, "keyNumber: " + keyNumber, true);
         errorCode = new byte[2];
         // sanity checks
         if (keyNumber < 0) {
@@ -2393,7 +2398,7 @@ PERMISSION_DENIED
             return -1;
         }
         if (checkResponse(response)) {
-            log(methodName, methodName + " SUCCESS");
+            //log(methodName, methodName + " SUCCESS");
             errorCode = RESPONSE_OK.clone();
             errorCodeReason = methodName + " SUCCESS";
             isApplicationSelected = true;
@@ -2417,15 +2422,16 @@ PERMISSION_DENIED
         // Case 1: Key number to be changed ≠ Key number for currently authenticated session
         // Case 2: Key number to be changed == Key number for currently authenticated session (usually the application Master key)
 
-        // todo work on case 2
+
 
         String logData = "";
+        final boolean debug = false;
         final String methodName = "changeApplicationKey";
-        log(methodName, "started", true);
-        log(methodName, "keyNumber: " + keyNumber);
-        log(methodName, printData("keyNew", keyNew));
-        log(methodName, printData("keyOld", keyOld));
-        log(methodName, "keyVersionNew: " + keyVersionNew);
+        if (debug) log(methodName, "started", true);
+        if (debug) log(methodName, "keyNumber: " + keyNumber);
+        if (debug) log(methodName, printData("keyNew", keyNew));
+        if (debug) log(methodName, printData("keyOld", keyOld));
+        if (debug) log(methodName, "keyVersionNew: " + keyVersionNew);
         // sanity checks
         errorCode = new byte[2];
         // sanity checks
@@ -2471,8 +2477,8 @@ PERMISSION_DENIED
         // Encrypting the Command Data
         // IV_Input (IV_Label || TI || CmdCounter || Padding)
         byte[] commandCounterLsb = intTo2ByteArrayInversed(CmdCounter);
-        log(methodName, "CmdCounter: " + CmdCounter);
-        log(methodName, printData("commandCounterLsb", commandCounterLsb));
+        if (debug) log(methodName, "CmdCounter: " + CmdCounter);
+        if (debug) log(methodName, printData("commandCounterLsb", commandCounterLsb));
         byte[] padding1 = hexStringToByteArray("0000000000000000"); // 8 bytes
         ByteArrayOutputStream baosIvInput = new ByteArrayOutputStream();
         baosIvInput.write(HEADER_MAC, 0, HEADER_MAC.length);
@@ -2480,13 +2486,13 @@ PERMISSION_DENIED
         baosIvInput.write(commandCounterLsb, 0, commandCounterLsb.length);
         baosIvInput.write(padding1, 0, padding1.length);
         byte[] ivInput = baosIvInput.toByteArray();
-        log(methodName, printData("ivInput", ivInput));
+        if (debug) log(methodName, printData("ivInput", ivInput));
 
         // IV for CmdData = Enc(KSesAuthENC, IV_Input)
-        log(methodName, printData("SesAuthENCKey", SesAuthENCKey));
+        if (debug) log(methodName, printData("SesAuthENCKey", SesAuthENCKey));
         byte[] startingIv = new byte[16];
         byte[] ivForCmdData = AES.encrypt(startingIv, SesAuthENCKey, ivInput);
-        log(methodName, printData("ivForCmdData", ivForCmdData));
+        if (debug) log(methodName, printData("ivForCmdData", ivForCmdData));
 
         // Data (New KeyValue || New KeyVersion || CRC32 of New KeyValue || Padding)
         // 0123456789012345678901234567890100A0A608688000000000000000000000
@@ -2502,9 +2508,9 @@ PERMISSION_DENIED
         for (int i = 0; i < keyOld.length; i++) {
             keyNewXor[i] ^= keyOld[i % keyOld.length];
         }
-        log(methodName, printData("keyNewXor", keyNewXor));
+        if (debug) log(methodName, printData("keyNewXor", keyNewXor));
         byte[] crc32 = CRC32.get(keyNew);
-        log(methodName, printData("crc32 of keyNew", crc32));
+        if (debug) log(methodName, printData("crc32 of keyNew", crc32));
         byte[] padding = hexStringToByteArray("8000000000000000000000");
         ByteArrayOutputStream baosData = new ByteArrayOutputStream();
         baosData.write(keyNewXor, 0, keyNewXor.length);
@@ -2512,11 +2518,11 @@ PERMISSION_DENIED
         baosData.write(crc32, 0, crc32.length);
         baosData.write(padding, 0, padding.length);
         byte[] data = baosData.toByteArray();
-        log(methodName, printData("data", data));
+        if (debug) log(methodName, printData("data", data));
 
         // Encrypt the Command Data = E(KSesAuthENC, Data)
         byte[] encryptedData = AES.encrypt(ivForCmdData, SesAuthENCKey, data);
-        log(methodName, printData("encryptedData", encryptedData));
+        if (debug) log(methodName, printData("encryptedData", encryptedData));
 
         // MAC_Input (Ins || CmdCounter || TI || CmdHeader = keyNumber || Encrypted CmdData )
         // C40000BC354CD50180D40DB52D5D8CA136249A0A14154DBA1BE0D67C408AB24CF0F3D3B4FE333C6A
@@ -2528,15 +2534,15 @@ PERMISSION_DENIED
         baosMacInput.write(keyNumber);
         baosMacInput.write(encryptedData, 0, encryptedData.length);
         byte[] macInput = baosMacInput.toByteArray();
-        log(methodName, printData("macInput", macInput));
+        if (debug) log(methodName, printData("macInput", macInput));
 
         // generate the MAC (CMAC) with the SesAuthMACKey
-        log(methodName, printData("SesAuthMACKey", SesAuthMACKey));
+        if (debug) log(methodName, printData("SesAuthMACKey", SesAuthMACKey));
         byte[] macFull = calculateDiverseKey(SesAuthMACKey, macInput);
-        log(methodName, printData("macFull", macFull));
+        if (debug) log(methodName, printData("macFull", macFull));
         // now truncate the MAC
         byte[] macTruncated = truncateMAC(macFull);
-        log(methodName, printData("macTruncated", macTruncated));
+        if (debug) log(methodName, printData("macTruncated", macTruncated));
 
         // Data (CmdHeader = keyNumber || Encrypted Data || MAC)
         ByteArrayOutputStream baosChangeKeyCommand = new ByteArrayOutputStream();
@@ -2544,16 +2550,16 @@ PERMISSION_DENIED
         baosChangeKeyCommand.write(encryptedData, 0, encryptedData.length);
         baosChangeKeyCommand.write(macTruncated, 0, macTruncated.length);
         byte[] changeKeyCommand = baosChangeKeyCommand.toByteArray();
-        log(methodName, printData("changeKeyCommand", changeKeyCommand));
+        if (debug) log(methodName, printData("changeKeyCommand", changeKeyCommand));
 
         byte[] response = new byte[0];
         byte[] apdu = new byte[0];
         byte[] responseMACTruncatedReceived;
         try {
             apdu = wrapMessage(CHANGE_KEY_SECURE_COMMAND, changeKeyCommand);
-            log(methodName, printData("apdu", apdu));
+            if (debug) log(methodName, printData("apdu", apdu));
             response = isoDep.transceive(apdu);
-            log(methodName, printData("response", response));
+            if (debug) log(methodName, printData("response", response));
             //Log.d(TAG, methodName + printData(" response", response));
         } catch (IOException e) {
             Log.e(TAG, methodName + " transceive failed, IOException:\n" + e.getMessage());
@@ -2564,7 +2570,7 @@ PERMISSION_DENIED
         byte[] responseBytes = returnStatusBytes(response);
         System.arraycopy(responseBytes, 0, errorCode, 0, 2);
         if (checkResponse(response)) {
-            Log.d(TAG, methodName + " SUCCESS, now decrypting the received data");
+            if (debug) Log.d(TAG, methodName + " SUCCESS, now decrypting the received data");
         } else {
             Log.d(TAG, methodName + " FAILURE with error code " + Utils.bytesToHexNpeUpperCase(responseBytes));
             Log.d(TAG, methodName + " error code: " + EV3.getErrorCode(responseBytes));
@@ -2573,7 +2579,7 @@ PERMISSION_DENIED
 
         // note: after sending data to the card the commandCounter is increased by 1
         CmdCounter++;
-        log(methodName, "the CmdCounter is increased by 1 to " + CmdCounter);
+        if (debug) log(methodName, "the CmdCounter is increased by 1 to " + CmdCounter);
 
         // compare the responseMAC's
         responseMACTruncatedReceived = Arrays.copyOf(response, response.length - 2);
@@ -2670,7 +2676,7 @@ PERMISSION_DENIED
 
     // rotate the array one byte to the left
     private byte[] rotateLeft(byte[] data) {
-        log("rotateLeft", printData("data", data), true);
+        //log("rotateLeft", printData("data", data), true);
         byte[] ret = new byte[data.length];
         System.arraycopy(data, 1, ret, 0, data.length - 1);
         ret[data.length - 1] = data[0];
@@ -2679,7 +2685,7 @@ PERMISSION_DENIED
 
     // rotate the array one byte to the right
     private byte[] rotateRight(byte[] data) {
-        log("rotateRight", printData("data", data), true);
+        //log("rotateRight", printData("data", data), true);
         byte[] unrotated = new byte[data.length];
         for (int i = 1; i < data.length; i++) {
             unrotated[i] = data[i - 1];
@@ -2708,7 +2714,7 @@ PERMISSION_DENIED
      */
 
     private byte[] getRandomData(byte[] key) {
-        log("getRandomData", printData("key", key), true);
+        //log("getRandomData", printData("key", key), true);
         //Log.d(TAG, "getRandomData " + printData("var", var));
         int keyLength = key.length;
         return getRandomData(keyLength);
@@ -2720,7 +2726,7 @@ PERMISSION_DENIED
      * @return a byte[]
      */
     private byte[] getRandomData(int length) {
-        log("getRandomData", "length: " + length, true);
+        //log("getRandomData", "length: " + length, true);
         //Log.d(TAG, "getRandomData " + " length: " + length);
         byte[] value = new byte[length];
         SecureRandom secureRandom = new SecureRandom();
@@ -2744,18 +2750,19 @@ PERMISSION_DENIED
         // see
         // see MIFARE DESFire Light contactless application IC pdf, page 28
         final String methodName = "getSesAuthEncKey";
-        log(methodName, printData("rndA", rndA) + printData(" rndB", rndB) + printData(" authenticationKey", authenticationKey), false);
+        final boolean debug = false;
+        if (debug) log(methodName, printData("rndA", rndA) + printData(" rndB", rndB) + printData(" authenticationKey", authenticationKey), false);
         // sanity checks
         if ((rndA == null) || (rndA.length != 16)) {
-            log(methodName, "rndA is NULL or wrong length, aborted");
+            if (debug) log(methodName, "rndA is NULL or wrong length, aborted");
             return null;
         }
         if ((rndB == null) || (rndB.length != 16)) {
-            log(methodName, "rndB is NULL or wrong length, aborted");
+            if (debug) log(methodName, "rndB is NULL or wrong length, aborted");
             return null;
         }
         if ((authenticationKey == null) || (authenticationKey.length != 16)) {
-            log(methodName, "authenticationKey is NULL or wrong length, aborted");
+            if (debug) log(methodName, "authenticationKey is NULL or wrong length, aborted");
             return null;
         }
 
@@ -2792,27 +2799,27 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
         byte[] rndA02to07 = new byte[6];
         byte[] rndB00to05 = new byte[6];
         rndA02to07 = Arrays.copyOfRange(rndA, 2, 8);
-        log(methodName, printData("rndA     ", rndA));
-        log(methodName, printData("rndA02to07", rndA02to07));
+        if (debug) log(methodName, printData("rndA     ", rndA));
+        if (debug) log(methodName, printData("rndA02to07", rndA02to07));
         rndB00to05 = Arrays.copyOfRange(rndB, 0, 6);
-        log(methodName, printData("rndB     ", rndB));
-        log(methodName, printData("rndB00to05", rndB00to05));
+        if (debug) log(methodName, printData("rndB     ", rndB));
+        if (debug) log(methodName, printData("rndB00to05", rndB00to05));
         byte[] xored = xor(rndA02to07, rndB00to05);
-        log(methodName, printData("xored     ", xored));
+        if (debug) log(methodName, printData("xored     ", xored));
         System.arraycopy(xored, 0, cmacInput, 8, 6);
         System.arraycopy(rndB, 6, cmacInput, 14, 10);
         System.arraycopy(rndA, 8, cmacInput, 24, 8);
 
-        log(methodName, printData("rndA     ", rndA));
-        log(methodName, printData("rndB     ", rndB));
-        log(methodName, printData("cmacInput", cmacInput));
+        if (debug) log(methodName, printData("rndA     ", rndA));
+        if (debug) log(methodName, printData("rndB     ", rndB));
+        if (debug) log(methodName, printData("cmacInput", cmacInput));
         if (TEST_MODE) {
             boolean testResult = compareTestModeValues(cmacInput, sv1_expected, "SV1");
         }
         byte[] iv = new byte[16];
-        log(methodName, printData("iv       ", iv));
+        if (debug) log(methodName, printData("iv       ", iv));
         byte[] cmac = calculateDiverseKey(authenticationKey, cmacInput);
-        log(methodName, printData("cmacOut ", cmac));
+        if (debug) log(methodName, printData("cmacOut ", cmac));
         if (TEST_MODE) {
             boolean testResult = compareTestModeValues(cmac, SesAuthENCKey_expected, "SesAUthENCKey");
         }
@@ -2888,7 +2895,8 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
         // see
         // see MIFARE DESFire Light contactless application IC pdf, page 28
         final String methodName = "getSesAuthMacKey";
-        log(methodName, printData("rndA", rndA) + printData(" rndB", rndB) + printData(" authenticationKey", authenticationKey));
+        final boolean debug = false;
+        if (debug) log(methodName, printData("rndA", rndA) + printData(" rndB", rndB) + printData(" authenticationKey", authenticationKey));
         // sanity checks
         if ((rndA == null) || (rndA.length != 16)) {
             log(methodName, "rndA is NULL or wrong length, aborted");
@@ -2915,24 +2923,24 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
         byte[] rndA02to07 = new byte[6];
         byte[] rndB00to05 = new byte[6];
         rndA02to07 = Arrays.copyOfRange(rndA, 2, 8);
-        log(methodName, printData("rndA     ", rndA));
-        log(methodName, printData("rndA02to07", rndA02to07));
+        if (debug) log(methodName, printData("rndA     ", rndA));
+        if (debug) log(methodName, printData("rndA02to07", rndA02to07));
         rndB00to05 = Arrays.copyOfRange(rndB, 0, 6);
-        log(methodName, printData("rndB     ", rndB));
-        log(methodName, printData("rndB00to05", rndB00to05));
+        if (debug) log(methodName, printData("rndB     ", rndB));
+        if (debug) log(methodName, printData("rndB00to05", rndB00to05));
         byte[] xored = xor(rndA02to07, rndB00to05);
-        log(methodName, printData("xored     ", xored));
+        if (debug) log(methodName, printData("xored     ", xored));
         System.arraycopy(xored, 0, cmacInput, 8, 6);
         System.arraycopy(rndB, 6, cmacInput, 14, 10);
         System.arraycopy(rndA, 8, cmacInput, 24, 8);
 
-        log(methodName, printData("rndA     ", rndA));
-        log(methodName, printData("rndB     ", rndB));
-        log(methodName, printData("cmacInput", cmacInput));
+        if (debug) log(methodName, printData("rndA     ", rndA));
+        if (debug) log(methodName, printData("rndB     ", rndB));
+        if (debug) log(methodName, printData("cmacInput", cmacInput));
         byte[] iv = new byte[16];
-        log(methodName, printData("iv       ", iv));
+        if (debug) log(methodName, printData("iv       ", iv));
         byte[] cmac = calculateDiverseKey(authenticationKey, cmacInput);
-        log(methodName, printData("cmacOut ", cmac));
+        if (debug) log(methodName, printData("cmacOut ", cmac));
         return cmac;
     }
 
@@ -2983,7 +2991,7 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
     }
 
     public byte[] calculateDiverseKey(byte[] masterKey, byte[] input) {
-        Log.d(TAG, "calculateDiverseKey" + printData(" masterKey", masterKey) + printData(" input", input));
+        //Log.d(TAG, "calculateDiverseKey" + printData(" masterKey", masterKey) + printData(" input", input));
         AesCmac mac = null;
         try {
             mac = new AesCmac();
@@ -3009,6 +3017,7 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
 
     private boolean verifyResponseMac(byte[] responseMAC, byte[] responseData) {
         final String methodName = "verifyResponseMac";
+        final boolean debug = false;
         byte[] commandCounterLsb = intTo2ByteArrayInversed(CmdCounter);
         ByteArrayOutputStream responseMacBaos = new ByteArrayOutputStream();
         responseMacBaos.write((byte) 0x00); // response code 00 means success
@@ -3018,15 +3027,15 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
             responseMacBaos.write(responseData, 0, responseData.length);
         }
         byte[] macInput = responseMacBaos.toByteArray();
-        log(methodName, printData("macInput", macInput));
+        if (debug) log(methodName, printData("macInput", macInput));
         byte[] responseMACCalculated = calculateDiverseKey(SesAuthMACKey, macInput);
-        log(methodName, printData("responseMACTruncatedReceived  ", responseMAC));
-        log(methodName, printData("responseMACCalculated", responseMACCalculated));
+        if (debug) log(methodName, printData("responseMACTruncatedReceived  ", responseMAC));
+        if (debug) log(methodName, printData("responseMACCalculated", responseMACCalculated));
         byte[] responseMACTruncatedCalculated = truncateMAC(responseMACCalculated);
-        log(methodName, printData("responseMACTruncatedCalculated", responseMACTruncatedCalculated));
+        if (debug) log(methodName, printData("responseMACTruncatedCalculated", responseMACTruncatedCalculated));
         // compare the responseMAC's
         if (Arrays.equals(responseMACTruncatedCalculated, responseMAC)) {
-            Log.d(TAG, "responseMAC SUCCESS");
+            if (debug) Log.d(TAG, "responseMAC SUCCESS");
             System.arraycopy(RESPONSE_OK, 0, errorCode, 0, RESPONSE_OK.length);
             return true;
         } else {
@@ -3038,7 +3047,8 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
 
     private byte[] truncateMAC(byte[] fullMAC) {
         final String methodName = "truncateMAC";
-        log(methodName, printData("fullMAC", fullMAC), true);
+        final boolean debug = false;
+        if (debug) log(methodName, printData("fullMAC", fullMAC), true);
         if ((fullMAC == null) || (fullMAC.length < 2)) {
             log(methodName, "fullMAC is NULL or of wrong length, aborted");
             return null;
@@ -3050,12 +3060,12 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
             truncatedMAC[truncatedMACPos] = fullMAC[i];
             truncatedMACPos++;
         }
-        log(methodName, printData("truncatedMAC", truncatedMAC));
+        if (debug) log(methodName, printData("truncatedMAC", truncatedMAC));
         return truncatedMAC;
     }
 
     private byte[] xor(byte[] dataA, byte[] dataB) {
-        log("xor", printData("dataA", dataA) + printData(" dataB", dataB), true);
+        //log("xor", printData("dataA", dataA) + printData(" dataB", dataB), true);
         if ((dataA == null) || (dataB == null)) {
             Log.e(TAG, "xor - dataA or dataB is NULL, aborted");
             return null;
@@ -3274,13 +3284,14 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
     }
 
     private byte[] sendData(byte[] apdu) {
+        final boolean debug = false;
         String methodName = "sendData";
         if (isoDep == null) {
             Log.e(TAG, methodName + " isoDep is NULL");
             log(methodName, "isoDep is NULL, aborted");
             return null;
         }
-        log(methodName, printData("send apdu -->", apdu));
+        if (debug) log(methodName, printData("send apdu -->", apdu));
         byte[] recvBuffer;
         try {
             recvBuffer = isoDep.transceive(apdu);
@@ -3295,7 +3306,7 @@ SV 2 = [0x5A][0xA5][0x00][0x01] [0x00][0x80][RndA[15:14] || [ (RndA[13:8] ⊕ Rn
             e.printStackTrace();
             return null;
         }
-        log(methodName, printData("received  <--", recvBuffer));
+        if (debug) log(methodName, printData("received  <--", recvBuffer));
         return recvBuffer;
     }
 

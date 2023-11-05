@@ -52,7 +52,7 @@ public class AES {
 
 
 	public static byte[] encrypt(byte[] myIV, byte[] myKey, byte[] myMsg) {
-		Log.d(TAG, "encrypt with " + printData("myIV", myIV) + printData(" myKey", myKey) + printData(" myMsg", myMsg));
+		//Log.d(TAG, "encrypt with " + printData("myIV", myIV) + printData(" myKey", myKey) + printData(" myMsg", myMsg));
 		byte[] cipherText = null;
 
 		try {
@@ -79,7 +79,7 @@ public class AES {
 	 * @return		The plain text, or null on error.
 	 */
 	public static byte[] decrypt(byte[] myIV, byte[] myKey, byte[] myMsg) {
-		Log.d(TAG, "decrypt with " + printData("myIV", myIV) + printData(" myKey", myKey) + printData(" myMsg", myMsg));
+		//Log.d(TAG, "decrypt with " + printData("myIV", myIV) + printData(" myKey", myKey) + printData(" myMsg", myMsg));
 		byte[] plainText = null;
 		try {
 			IvParameterSpec iv = new IvParameterSpec(myIV);
@@ -107,7 +107,7 @@ public class AES {
 	 * @return			the plaintext, or {@code null} on error
 	 */
 	public static byte[] decrypt(byte[] myIV, byte[] myKey, byte[] myMsg, int offset, int length) {
-		Log.d(TAG, "decrypt with " + printData("myIV", myIV) + printData(" myKey", myKey) + printData(" myMsg", myMsg) + " offset: " + offset + " length: " + length);
+		//Log.d(TAG, "decrypt with " + printData("myIV", myIV) + printData(" myKey", myKey) + printData(" myMsg", myMsg) + " offset: " + offset + " length: " + length);
 		byte[] plainText = null;
 		try {
 			IvParameterSpec iv = new IvParameterSpec(myIV);
